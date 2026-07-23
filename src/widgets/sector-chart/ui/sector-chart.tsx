@@ -39,14 +39,14 @@ export function SectorChart() {
           </ResponsiveContainer>
         </div>
 
-        <ul className="flex flex-col gap-2.5 text-[13px]">
+        <ul className="flex min-w-0 flex-1 flex-col gap-2.5 text-[13px]">
           {slices.map((slice, index) => (
             <li key={slice.key} className="flex items-center gap-2">
               <span
                 className="size-2.5 rounded-[3px]"
                 style={{ backgroundColor: SECTOR_COLORS[index % SECTOR_COLORS.length] }}
               />
-              <span className="flex-1">{slice.label}</span>
+              <span className="flex-1 whitespace-nowrap">{slice.label}</span>
               <span className="font-bold">{formatPercent(slice.ratio, { digits: 1 })}</span>
             </li>
           ))}

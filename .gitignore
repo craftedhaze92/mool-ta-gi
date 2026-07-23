@@ -152,3 +152,6 @@ next-env.d.ts
 
 # Turbopack
 .turbo
+
+# Playwright MCP 산출물
+.playwright-mcp
