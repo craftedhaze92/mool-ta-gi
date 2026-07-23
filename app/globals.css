@@ -64,10 +64,32 @@
   --color-hairline: #d8dee6;
   --color-muted-strong: #4e5968;
 
-  --color-sector-1: #33415c;
-  --color-sector-2: #5a719c;
-  --color-sector-3: #93a6c6;
-  --color-sector-4: #cfd8e6;
+  /*
+   * 섹터 도넛용 카테고리컬 팔레트 — 섹터는 크기가 아니라 '정체성'이라 색상을 나눈다.
+   * 슬롯 순서 자체가 색각이상 안전성 장치이므로 임의로 재배열하지 않는다.
+   * (흰 카드 위 인접쌍 최악 ΔE: 색각이상 9.1 / 일반시야 19.6 — 둘 다 기준 통과)
+   *
+   * 무지개처럼 색상환 순서로 늘어놓는 배열은 노랑·주황·빨강·마젠타가 이웃하게 되어
+   * 일반시야 ΔE 7.1까지 떨어진다. 그래서 이 순서는 '그라데이션처럼' 정렬하지 않는다.
+   */
+  --color-sector-1: #2a78d6; /* blue */
+  --color-sector-2: #eb6834; /* orange */
+  --color-sector-3: #1baf7a; /* aqua */
+  --color-sector-4: #eda100; /* yellow */
+  --color-sector-5: #e87ba4; /* magenta */
+  --color-sector-6: #008300; /* green */
+  --color-sector-7: #4a3aa7; /* violet */
+
+  /*
+   * 종목 비중 막대용 순차(ordinal) 램프 — 막대는 이미 길이가 크기를 보여주므로
+   * 색은 정렬 순서를 보강하는 한 가지 색상의 명도 그라데이션으로 둔다.
+   * 100단위 간격이라야 인접 단계 명도차 0.06을 넘는다(50단위는 0.047로 미달).
+   */
+  --color-ramp-1: #86b6ef;
+  --color-ramp-2: #5598e7;
+  --color-ramp-3: #2a78d6;
+  --color-ramp-4: #1c5cab;
+  --color-ramp-5: #104281;
 }
 
 @theme inline {

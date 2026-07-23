@@ -4,8 +4,31 @@ import { motion, useReducedMotion } from 'motion/react';
 import { calcHoldingAllocation, useHoldingsStore } from '@/entities/holding';
 import { formatPercent } from '@/shared/lib/format-won';
 
-/** 섹터 도넛과 같은 팔레트를 쓴다. */
-const BAR_COLORS = ['#33415c', '#5a719c', '#93a6c6', '#cfd8e6'];
+/**
+ * 순차(ordinal) 램프. app/globals.css의 --color-ramp-* 와 같은 값이다.
+ *
+ * 막대는 길이가 이미 비중을 보여주므로 색까지 크기를 다시 표현하면 채널이 겹친다.
+ * 대신 한 가지 색상의 명도만 바꿔 '비중 내림차순 정렬'을 색으로 보강한다.
+ * 섹터 도넛이 색상을 나누는 것과 역할이 달라 팔레트를 공유하지 않는다.
+ */
+const BAR_RAMP = ['#86b6ef', '#5598e7', '#2a78d6', '#1c5cab', '#104281'];
+
+/**
+ * 정렬된 목록의 i번째 막대 색. 종목 수와 무관하게 램프 전체 폭을 쓰도록 펼친다.
+ *
+ * 목록은 비중 내림차순이고 램프는 옅은 색에서 시작하므로 뒤집어서 읽는다.
+ * 순차 램프의 관례가 '진할수록 큰 값'이라, 비중 1위가 가장 진한 색을 받아야 한다.
+ *
+ * 종목이 램프 단계보다 많으면 이웃한 막대가 같은 색을 공유하지만,
+ * 길이와 % 라벨이 이미 둘을 구분해 준다.
+ */
+function rampColor(index: number, total: number): string {
+  const darkest = BAR_RAMP.length - 1;
+  if (total <= 1) return BAR_RAMP[darkest];
+
+  const position = (index / (total - 1)) * darkest;
+  return BAR_RAMP[darkest - Math.round(position)];
+}
 
 export function HoldingAllocation() {
   const holdings = useHoldingsStore((state) => state.holdings);
@@ -35,7 +58,7 @@ export function HoldingAllocation() {
             <div className="bg-track h-2 rounded">
               <motion.div
                 className="h-2 rounded"
-                style={{ backgroundColor: BAR_COLORS[index % BAR_COLORS.length] }}
+                style={{ backgroundColor: rampColor(index, slices.length) }}
                 initial={prefersReducedMotion ? false : { width: 0 }}
                 animate={{ width: `${slice.ratio}%` }}
                 transition={{ duration: 0.5, ease: 'easeOut', delay: index * 0.05 }}
