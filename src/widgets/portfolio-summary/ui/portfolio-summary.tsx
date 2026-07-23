@@ -17,10 +17,21 @@ function SummaryCard({ label, value, sub, tone }: SummaryCardProps) {
   const toneClass = tone === 'up' ? 'text-up' : tone === 'down' ? 'text-down' : undefined;
 
   return (
-    <div className="bg-card flex flex-col gap-2 rounded-2xl px-[22px] py-5">
-      <span className="text-muted-foreground text-[13px] font-medium">{label}</span>
-      <span className={cn('text-2xl font-bold tracking-[-0.01em]', toneClass)}>{value}</span>
-      {sub && <span className={cn('text-[13px] font-semibold', toneClass)}>{sub}</span>}
+    <div className="bg-card flex flex-col gap-1.5 rounded-2xl px-4 py-4 lg:gap-2 lg:px-[22px] lg:py-5">
+      <span className="text-muted-foreground text-xs font-medium lg:text-[13px]">{label}</span>
+      {/*
+       * 카드가 가장 좁아지는 건 4칸이 되는 lg 직후다. 거기서 ₩24,414,000이 카드를 넘지 않는
+       * 크기가 상한이고, nowrap이 있어야 부호(−)가 숫자와 따로 떨어지지 않는다.
+       */}
+      <span
+        className={cn(
+          'text-xl font-bold tracking-[-0.01em] whitespace-nowrap xl:text-2xl',
+          toneClass,
+        )}
+      >
+        {value}
+      </span>
+      {sub && <span className={cn('text-xs font-semibold lg:text-[13px]', toneClass)}>{sub}</span>}
     </div>
   );
 }
@@ -41,7 +52,8 @@ export function PortfolioSummary() {
   const rate = (value: number) => (isEmpty ? '—' : formatPercent(value, { signed: true }));
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    // 4칸은 lg부터. md(768)에서 4칸으로 나누면 카드 폭이 금액을 못 담는다
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
       <SummaryCard label="총 평가금액" value={formatWon(summary.totalValue)} />
       <SummaryCard label="총 매입금액" value={formatWon(summary.totalCost)} />
       <SummaryCard
