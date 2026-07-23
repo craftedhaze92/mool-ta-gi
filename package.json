@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "font:subset": "mkdir -p app/fonts && pyftsubset tools/fonts/BMDOHYEON_ttf.ttf --text=\"평단구조대물타기감으로말고계산하기보유종목없어요첫추가\" --unicodes=\"U+0020-007E\" --flavor=woff2 --no-hinting --desubroutinize --output-file=app/fonts/BMDOHYEON-subset.woff2"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

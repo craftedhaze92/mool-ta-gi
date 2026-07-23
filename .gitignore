@@ -156,6 +156,11 @@ next-env.d.ts
 # Playwright MCP 산출물
 .playwright-mcp
 
+# 폰트 원본 — 서브셋 결과물(app/fonts/*.woff2)만 커밋한다.
+# 재생성은 pnpm font:subset, 원본 출처는 README 참고.
+tools/fonts/BMDOHYEON_*.ttf
+tools/fonts/BMDOHYEON_*.otf
+
 # OS 잔여물
 .DS_Store
 Thumbs.db
