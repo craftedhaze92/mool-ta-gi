@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { dohyeon } from './fonts';
 import { QueryProvider } from '@/shared/api';
 import { ThemeProvider } from '@/shared/ui/theme-provider';
 
@@ -41,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning className="h-full antialiased">
+    <html lang="ko" suppressHydrationWarning className={`${dohyeon.variable} h-full antialiased`}>
       <head>
         {/* 시안 지정 서체. self-host 전환은 다음 단계. */}
         <link
