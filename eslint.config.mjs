@@ -63,6 +63,35 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  /*
+   * dayjs는 plugin/locale 등록이 전역 부수효과라, 설정을 거치지 않은 인스턴스를 쓰면
+   * 타임존과 한글 로케일이 빠진 채로 동작한다. 설정 모듈을 통해서만 쓰도록 강제한다.
+   * (설정 모듈 자신은 당연히 예외다)
+   */
+  {
+    files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
+    ignores: ['src/shared/lib/dayjs.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'dayjs',
+              message:
+                "dayjs를 직접 import하지 말고 '@/shared/lib/dayjs'의 kst()를 쓰세요. 직접 쓰면 타임존·한글 로케일 설정이 적용되지 않습니다.",
+            },
+          ],
+          patterns: [
+            {
+              group: ['dayjs/*'],
+              message: "dayjs 플러그인·로케일 등록은 '@/shared/lib/dayjs'에서 한 번만 합니다.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
     plugins: { boundaries },
