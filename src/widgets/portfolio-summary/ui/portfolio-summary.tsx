@@ -1,4 +1,6 @@
-import { calcPortfolioSummary, MOCK_HOLDINGS } from '@/entities/holding';
+'use client';
+
+import { calcPortfolioSummary, useHoldingsStore } from '@/entities/holding';
 import { formatPercent, formatSignedWon, formatWon } from '@/shared/lib/format-won';
 import { cn } from '@/shared/lib/utils';
 
@@ -31,7 +33,12 @@ function toneOf(amount: number): SummaryCardProps['tone'] {
 }
 
 export function PortfolioSummary() {
-  const summary = calcPortfolioSummary(MOCK_HOLDINGS);
+  const holdings = useHoldingsStore((state) => state.holdings);
+  const summary = calcPortfolioSummary(holdings);
+
+  // 종목이 없으면 손익률은 계산할 대상이 없다. 0.00%보다 '—'가 정직하다.
+  const isEmpty = holdings.length === 0;
+  const rate = (value: number) => (isEmpty ? '—' : formatPercent(value, { signed: true }));
 
   return (
     <div className="grid grid-cols-4 gap-4">
@@ -40,13 +47,13 @@ export function PortfolioSummary() {
       <SummaryCard
         label="평가손익"
         value={formatSignedWon(summary.totalProfit)}
-        sub={formatPercent(summary.totalProfitRate, { signed: true })}
+        sub={rate(summary.totalProfitRate)}
         tone={toneOf(summary.totalProfit)}
       />
       <SummaryCard
         label="오늘 등락"
         value={formatSignedWon(summary.totalDayChange)}
-        sub={formatPercent(summary.totalDayChangeRate, { signed: true })}
+        sub={rate(summary.totalDayChangeRate)}
         tone={toneOf(summary.totalDayChange)}
       />
     </div>

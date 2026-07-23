@@ -4,8 +4,8 @@ import {
   calcAveraging,
   calcPriceGapRate,
   calcQuantityForTargetAverage,
-  MOCK_HOLDINGS,
-  useSelectedHoldingStore,
+  useHoldingsStore,
+  useSelectedHolding,
 } from '@/entities/holding';
 import { formatPercent, formatQuantity, formatWon } from '@/shared/lib/format-won';
 import { AnimatedNumber } from '@/shared/ui/animated-number';
@@ -33,11 +33,27 @@ function ResultRow({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
-export function AveragingPanel() {
-  const { selectedCode, addQuantity, targetAvgInput, setAddQuantity, setTargetAvgInput } =
-    useSelectedHoldingStore();
+/** 계산할 종목이 없을 때. 시뮬레이터 UI 전체를 감추고 안내만 남긴다. */
+function EmptyPanel() {
+  return (
+    <aside className="bg-card sticky top-5 flex flex-col gap-3 rounded-2xl p-6">
+      <h2 className="text-base font-bold">물타기 시뮬레이터</h2>
+      <p className="text-muted-foreground text-[13px] leading-relaxed">
+        아직 계산할 종목이 없어요. 왼쪽에서 종목을 추가하면 평단가 시뮬레이션을 할 수 있습니다.
+      </p>
+    </aside>
+  );
+}
 
-  const holding = MOCK_HOLDINGS.find((h) => h.code === selectedCode) ?? MOCK_HOLDINGS[0];
+export function AveragingPanel() {
+  const holding = useSelectedHolding();
+  const addQuantity = useHoldingsStore((s) => s.addQuantity);
+  const targetAvgInput = useHoldingsStore((s) => s.targetAvgInput);
+  const setAddQuantity = useHoldingsStore((s) => s.setAddQuantity);
+  const setTargetAvgInput = useHoldingsStore((s) => s.setTargetAvgInput);
+
+  if (!holding) return <EmptyPanel />;
+
   const result = calcAveraging(holding, addQuantity);
   const gapRate = calcPriceGapRate(holding);
   const needsRise = result.breakEvenRate > 0;
