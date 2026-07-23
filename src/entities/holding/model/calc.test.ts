@@ -7,6 +7,8 @@ import {
   calcPriceGapRate,
   calcQuantityForTargetAverage,
   calcSectorAllocation,
+  calcWeightedAverage,
+  pickNextSelectedId,
 } from './calc';
 import { MOCK_HOLDINGS } from './mock';
 import type { Holding } from './types';
@@ -154,5 +156,65 @@ describe('calcPriceGapRate', () => {
   it('손실 구간은 음수, 수익 구간은 양수다', () => {
     expect(calcPriceGapRate(samsung)).toBeCloseTo(-9.1837, 3);
     expect(calcPriceGapRate(hynix)).toBeCloseTo(18.75, 5);
+  });
+});
+
+describe('calcWeightedAverage', () => {
+  it('수량으로 가중한 평균 단가를 낸다', () => {
+    // (120×78,400 + 30×71,200) / 150 = 76,960
+    expect(calcWeightedAverage(120, 78_400, 30, 71_200)).toBe(76_960);
+  });
+
+  it('기존 수량이 0이면 추가 단가가 그대로 평단이 된다', () => {
+    expect(calcWeightedAverage(0, 78_400, 10, 71_200)).toBe(71_200);
+  });
+
+  it('추가 수량이 0이면 기존 평단이 유지된다', () => {
+    expect(calcWeightedAverage(120, 78_400, 0, 71_200)).toBe(78_400);
+  });
+
+  it('양쪽 수량이 모두 0이면 기존 평단을 그대로 돌려준다', () => {
+    expect(calcWeightedAverage(0, 78_400, 0, 71_200)).toBe(78_400);
+  });
+
+  it('단가가 같으면 아무리 합산해도 평단이 변하지 않는다', () => {
+    expect(calcWeightedAverage(120, 50_000, 999, 50_000)).toBe(50_000);
+  });
+
+  it('원 단위로 반올림한다', () => {
+    // (1×100 + 2×101) / 3 = 100.666… → 101
+    expect(calcWeightedAverage(1, 100, 2, 101)).toBe(101);
+    // (1×100 + 1×101) / 2 = 100.5 → 101 (.5는 올림)
+    expect(calcWeightedAverage(1, 100, 1, 101)).toBe(101);
+    // (3×100 + 1×101) / 4 = 100.25 → 100
+    expect(calcWeightedAverage(3, 100, 1, 101)).toBe(100);
+  });
+});
+
+describe('pickNextSelectedId', () => {
+  const [a, b, c] = MOCK_HOLDINGS;
+  const list = [a, b, c];
+
+  it('선택 중이 아닌 종목을 지우면 선택은 그대로다', () => {
+    expect(pickNextSelectedId(list, a.id, b.id)).toBe(b.id);
+    expect(pickNextSelectedId(list, c.id, b.id)).toBe(b.id);
+  });
+
+  it('선택 중인 종목을 지우면 뒤 종목으로 옮겨간다', () => {
+    expect(pickNextSelectedId(list, a.id, a.id)).toBe(b.id);
+    expect(pickNextSelectedId(list, b.id, b.id)).toBe(c.id);
+  });
+
+  it('마지막 종목을 지우면 앞 종목으로 옮겨간다', () => {
+    expect(pickNextSelectedId(list, c.id, c.id)).toBe(b.id);
+  });
+
+  it('하나 남은 종목을 지우면 선택할 것이 없다', () => {
+    expect(pickNextSelectedId([a], a.id, a.id)).toBeNull();
+  });
+
+  it('선택 id가 목록에 없으면 첫 종목으로 떨어진다', () => {
+    expect(pickNextSelectedId(list, a.id, 'unknown')).toBe(b.id);
+    expect(pickNextSelectedId(list, a.id, null)).toBe(b.id);
   });
 });

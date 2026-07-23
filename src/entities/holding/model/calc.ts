@@ -93,17 +93,38 @@ export function calcHoldingAllocation(holdings: Holding[]): AllocationSlice[] {
 }
 
 /**
+ * 가중평균 평단가. 물타기 시뮬레이터와 '추가 매수' 합산이 함께 쓴다.
+ *
+ *   newAvg = (baseQty × baseAvg + addQty × addPrice) / (baseQty + addQty)
+ *
+ * 평단가는 표시·저장 모두 원 단위 정수이므로 반올림은 여기서 한 번만 한다.
+ * 총 수량이 0이면 나눌 것이 없으므로 baseAvgPrice를 그대로 돌려준다.
+ */
+export function calcWeightedAverage(
+  baseQuantity: number,
+  baseAvgPrice: number,
+  addQuantity: number,
+  addPrice: number,
+): number {
+  const totalQuantity = baseQuantity + addQuantity;
+  if (totalQuantity === 0) return Math.round(baseAvgPrice);
+
+  return Math.round((baseQuantity * baseAvgPrice + addQuantity * addPrice) / totalQuantity);
+}
+
+/**
  * 현재가에 addQuantity주를 추가 매수했을 때의 결과.
- * 시안의 계산식을 그대로 따른다: newAvg = (qty×avg + add×cur) / (qty + add)
+ * 평단 계산은 calcWeightedAverage에 위임한다.
  */
 export function calcAveraging(holding: Holding, addQuantity: number): AveragingResult {
   const add = Math.max(0, Math.round(addQuantity));
-  const totalQty = holding.quantity + add;
 
-  const newAvgPrice =
-    totalQty === 0
-      ? holding.avgPrice
-      : (holding.quantity * holding.avgPrice + add * holding.currentPrice) / totalQty;
+  const newAvgPrice = calcWeightedAverage(
+    holding.quantity,
+    holding.avgPrice,
+    add,
+    holding.currentPrice,
+  );
 
   return {
     newAvgPrice,
@@ -132,4 +153,33 @@ export function calcQuantityForTargetAverage(holding: Holding, targetAvg: number
 /** 현재가와 평단가 사이의 괴리율(%). 음수면 손실 구간이다. */
 export function calcPriceGapRate(holding: Holding): number {
   return safeRate(holding.currentPrice - holding.avgPrice, holding.avgPrice);
+}
+
+/**
+ * removedId를 지운 뒤 선택되어 있어야 할 종목 id.
+ *
+ * 선택 중이 아닌 종목이 지워졌다면 선택은 그대로 둔다. 선택 중인 종목이 지워졌다면
+ * 삭제된 자리로 인접 행을 끌어온다(마지막 행이었으면 그 앞 행). 목록이 비면 null.
+ *
+ * @param holdings 삭제 **전** 목록
+ */
+export function pickNextSelectedId(
+  holdings: Holding[],
+  removedId: string,
+  selectedId: string | null,
+): string | null {
+  const remaining = holdings.filter((h) => h.id !== removedId);
+  if (remaining.length === 0) return null;
+
+  // 지운 게 선택 대상이 아니면 선택을 건드릴 이유가 없다.
+  if (selectedId !== null && selectedId !== removedId) {
+    return remaining.some((h) => h.id === selectedId) ? selectedId : remaining[0].id;
+  }
+
+  const removedIndex = holdings.findIndex((h) => h.id === removedId);
+  if (removedIndex === -1) return remaining[0].id;
+
+  // 삭제 후 배열에서 같은 인덱스가 곧 '다음 행'이다. 범위를 벗어나면 앞 행으로.
+  const nextIndex = Math.min(removedIndex, remaining.length - 1);
+  return remaining[nextIndex].id;
 }
