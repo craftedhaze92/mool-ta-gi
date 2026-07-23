@@ -12,21 +12,29 @@
 
 ## 기술 스택 (고정 — 변경 금지)
 
-| 영역 | 선택 |
-| --- | --- |
-| 프레임워크 | Next.js (App Router) |
-| 언어 | TypeScript (`strict: true`) |
-| 패키지 매니저 | **pnpm 전용** (npm / yarn 사용 금지) |
-| 서버 상태 | TanStack React-Query v5 |
-| 클라이언트 상태 | Zustand (persist 미들웨어) |
-| UI | Shadcn UI + TailwindCSS |
-| 폼 / 검증 | react-hook-form + zod |
-| 차트 | recharts |
-| 테스트 | Vitest + React Testing Library |
-| 린트 | ESLint 9 Flat Config + eslint-plugin-boundaries |
-| 포맷터 | Prettier |
+| 영역            | 선택                                            |
+| --------------- | ----------------------------------------------- |
+| 프레임워크      | Next.js (App Router)                            |
+| 언어            | TypeScript (`strict: true`)                     |
+| 패키지 매니저   | **pnpm 전용** (npm / yarn 사용 금지)            |
+| 서버 상태       | TanStack React-Query v5                         |
+| 클라이언트 상태 | Zustand (persist 미들웨어)                      |
+| UI              | Shadcn UI + TailwindCSS                         |
+| 폼 / 검증       | react-hook-form + zod                           |
+| 차트            | recharts                                        |
+| 테스트          | Vitest + React Testing Library                  |
+| 린트            | ESLint 9 Flat Config + eslint-plugin-boundaries |
+| 포맷터          | Prettier                                        |
 
 새로운 라이브러리를 도입할 때는 위 스택으로 해결되지 않는지 먼저 확인한다.
+
+### Shadcn UI 설정 (components.json)
+
+- 베이스: **Radix UI**, 프리셋 `nova`(style `radix-nova`), 아이콘 `lucide`
+- base color `neutral`, CSS variables 사용, 다크모드는 `next-themes`(`attribute="class"`)
+- 컴포넌트 추가: `pnpm dlx shadcn@latest add <component>` → `src/shared/ui/`에 생성된다
+- 생성된 컴포넌트가 `createContext` 등 클라이언트 API를 쓰면 파일 맨 위에 `'use client'`를 붙인다
+  (예: `src/shared/ui/button.tsx`). 붙이지 않으면 `next build`의 page data 수집 단계에서 실패한다.
 
 ## 아키텍처: FSD (Feature-Sliced Design) 경량 5레이어
 
@@ -50,14 +58,14 @@ src/
 app → views → widgets → features → entities → shared
 ```
 
-| 레이어 | import 가능한 대상 |
-| --- | --- |
-| `app` | views, shared |
-| `views` | widgets, features, entities, shared |
-| `widgets` | features, entities, shared |
-| `features` | entities, shared |
-| `entities` | shared |
-| `shared` | shared (내부끼리만) |
+| 레이어     | import 가능한 대상                  |
+| ---------- | ----------------------------------- |
+| `app`      | views, shared                       |
+| `views`    | widgets, features, entities, shared |
+| `widgets`  | features, entities, shared          |
+| `features` | entities, shared                    |
+| `entities` | shared                              |
+| `shared`   | shared (내부끼리만)                 |
 
 - **역방향 import 금지.** 아래 레이어는 위 레이어를 절대 모른다.
 - **동일 레이어 내 슬라이스 간 import 금지.** 예: `widgets/holdings-table` → `widgets/portfolio-summary` 불가.
@@ -97,14 +105,14 @@ import { Button } from '@/shared/ui/button';
 
 ## 네이밍 컨벤션
 
-| 대상 | 규칙 | 예시 |
-| --- | --- | --- |
-| 슬라이스 / 폴더 / 파일 | kebab-case | `add-holding/`, `dashboard-page.tsx` |
-| React 컴포넌트 | PascalCase | `DashboardPage`, `HoldingsTable` |
-| 타입 / 인터페이스 | PascalCase | `Holding`, `PortfolioSummary` |
-| 훅 | 파일 `use-xxx.ts`, 함수 `useXxx` | `use-portfolio.ts` → `usePortfolio` |
-| 상수 | UPPER_SNAKE_CASE | `DEFAULT_CURRENCY` |
-| 함수 / 변수 | camelCase | `calcAverageCost` |
+| 대상                   | 규칙                             | 예시                                 |
+| ---------------------- | -------------------------------- | ------------------------------------ |
+| 슬라이스 / 폴더 / 파일 | kebab-case                       | `add-holding/`, `dashboard-page.tsx` |
+| React 컴포넌트         | PascalCase                       | `DashboardPage`, `HoldingsTable`     |
+| 타입 / 인터페이스      | PascalCase                       | `Holding`, `PortfolioSummary`        |
+| 훅                     | 파일 `use-xxx.ts`, 함수 `useXxx` | `use-portfolio.ts` → `usePortfolio`  |
+| 상수                   | UPPER_SNAKE_CASE                 | `DEFAULT_CURRENCY`                   |
+| 함수 / 변수            | camelCase                        | `calcAverageCost`                    |
 
 - 컴포넌트는 named export를 기본으로 한다 (`app/` 하위의 Next.js 규약 파일 제외 —
   `page.tsx`, `layout.tsx` 등은 default export 필수).
@@ -118,16 +126,16 @@ Conventional Commits를 따른다. 작업은 단계별로 쪼개서 커밋한다
 <type>: <설명>
 ```
 
-| type | 용도 |
-| --- | --- |
-| `feat` | 기능 추가 |
-| `fix` | 버그 수정 |
+| type       | 용도                     |
+| ---------- | ------------------------ |
+| `feat`     | 기능 추가                |
+| `fix`      | 버그 수정                |
 | `refactor` | 동작 변화 없는 구조 개선 |
-| `chore` | 설정, 구조, 잡무 |
-| `build` | 의존성 / 빌드 시스템 |
-| `test` | 테스트 추가·수정 |
-| `docs` | 문서 |
-| `style` | 포맷팅 |
+| `chore`    | 설정, 구조, 잡무         |
+| `build`    | 의존성 / 빌드 시스템     |
+| `test`     | 테스트 추가·수정         |
+| `docs`     | 문서                     |
+| `style`    | 포맷팅                   |
 
 ## 명령어
 
