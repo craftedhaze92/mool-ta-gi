@@ -38,7 +38,7 @@ export function HoldingAllocation() {
 
   if (slices.length === 0) {
     return (
-      <section className="bg-card rounded-2xl px-6 py-5">
+      <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
         <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
         <p className="text-muted-foreground py-10 text-center text-[13px]">
           종목을 추가하면 비중이 표시됩니다
@@ -48,12 +48,15 @@ export function HoldingAllocation() {
   }
 
   return (
-    <section className="bg-card rounded-2xl px-6 py-5">
+    <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
       <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
 
       <ul className="flex flex-col gap-[11px] text-[12.5px]">
         {slices.map((slice, index) => (
-          <li key={slice.key} className="grid grid-cols-[76px_1fr_44px] items-center gap-2.5">
+          <li
+            key={slice.key}
+            className="grid grid-cols-[64px_1fr_40px] items-center gap-2 sm:grid-cols-[76px_1fr_44px] sm:gap-2.5"
+          >
             <span className="truncate">{slice.label}</span>
 
             {/*
@@ -80,7 +83,8 @@ export function HoldingAllocation() {
                 value={formatWon(slice.value)}
                 sub={formatPercent(slice.ratio, { digits: 1 })}
                 swatch={rampColor(index, slices.length)}
-                className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 group-hover/bar:block group-focus-visible/bar:block"
+                /* 막대가 좁은 화면에서 카드 밖으로 나가지 않도록 폭 상한을 둔다 */
+                className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden max-w-[70vw] -translate-x-1/2 group-hover/bar:block group-focus-visible/bar:block"
               />
             </div>
 

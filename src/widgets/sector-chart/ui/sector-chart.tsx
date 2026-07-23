@@ -66,7 +66,7 @@ export function SectorChart() {
   const data = slices.map((slice) => ({ ...slice, fill: colorOf(slice.key) }));
 
   return (
-    <section className="bg-card rounded-2xl px-6 py-5">
+    <section className="bg-card @container rounded-2xl px-4 py-4 md:px-6 md:py-5">
       <h2 className="mb-3.5 text-[15px] font-bold">섹터별 비중</h2>
 
       {slices.length === 0 ? (
@@ -74,16 +74,21 @@ export function SectorChart() {
           종목을 추가하면 비중이 표시됩니다
         </p>
       ) : (
-        <div className="flex items-center gap-[22px]">
-          <div className="h-[164px] w-[164px] shrink-0">
+        /*
+         * 도넛(164) + 간격(22) 옆에 "반도체 57.2%" 한 줄이 들어가려면 카드 안쪽으로 300px이 필요하다.
+         * 이 카드는 1440에서도 380px밖에 안 되므로 기준을 @sm(384)로 잡으면 데스크톱에서도 쌓인다.
+         */
+        <div className="flex flex-col items-center gap-4 @min-[300px]:flex-row @min-[300px]:gap-[22px]">
+          <div className="size-[140px] shrink-0 @min-[300px]:size-[164px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   dataKey="value"
                   nameKey="label"
-                  innerRadius={59}
-                  outerRadius={81}
+                  /* 컨테이너가 줄어도 도넛 두께 비율이 유지되도록 반경을 %로 잡는다 */
+                  innerRadius="73%"
+                  outerRadius="100%"
                   startAngle={90}
                   endAngle={-270}
                   /* 조각 사이 표면 색 간격 — 인접한 두 색이 맞닿지 않게 띄운다 */
@@ -97,7 +102,8 @@ export function SectorChart() {
             </ResponsiveContainer>
           </div>
 
-          <ul className="flex min-w-0 flex-1 flex-col gap-2.5 text-[13px]">
+          {/* 세로로 쌓일 때는 범례가 한 줄씩 늘어지지 않게 2열로 접는다 */}
+          <ul className="grid w-full min-w-0 grid-cols-2 gap-x-4 gap-y-2 text-[13px] @min-[300px]:flex @min-[300px]:flex-1 @min-[300px]:flex-col @min-[300px]:gap-2.5">
             {slices.map((slice) => (
               <li key={slice.key} className="flex items-center gap-2">
                 <span
