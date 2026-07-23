@@ -4,7 +4,7 @@ import { QueryProvider } from '@/shared/api';
 import { ThemeProvider } from '@/shared/ui/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'mool-ta-gi (물타기)',
+  title: '물타기 | 감으로 말고 계산하고 물타세요',
   description: '국내 주식 포트폴리오 트래커 + 물타기 시뮬레이터',
 };
 
