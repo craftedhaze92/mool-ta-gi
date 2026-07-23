@@ -13,13 +13,15 @@
 body{margin:0;background:#f2f4f6;font-family:"Pretendard Variable",Pretendard,-apple-system,sans-serif;color:#191f28}
 a{color:#3182f6;text-decoration:none}a:hover{color:#1b64da}
 input[type=range]{accent-color:#3182f6}
+.icon-btn{position:relative}
+.icon-btn::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) scale(.94);background:#191f28;color:#fff;font-size:11px;font-weight:600;padding:5px 9px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;z-index:20}
+.icon-btn:hover::after{opacity:1;transform:translateX(-50%) scale(1)}
 </style>
 </helmet>
 <div data-screen-label="물타기 메인 대시보드" style="max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:20px;padding:0 40px 40px">
   <header style="display:flex;align-items:center;justify-content:space-between;padding:24px 0 0">
     <div style="display:flex;align-items:baseline;gap:10px">
       <span style="font-size:22px;font-weight:800;letter-spacing:-.02em">물타기</span>
-      <span style="font-size:12px;color:#8b95a1;font-weight:500">mool-ta-gi · 포트폴리오 관제</span>
     </div>
     <div style="display:flex;gap:24px;font-size:13px">
       <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSPI</span><span style="font-weight:700">3,214.56</span><span style="color:#3182f6;font-weight:600">▼18.24 −0.56%</span></div>
@@ -27,24 +29,44 @@ input[type=range]{accent-color:#3182f6}
     </div>
   </header>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">총 평가금액</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em">₩30,992,000</span></div>
-    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">총 매입금액</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em">₩32,552,000</span></div>
-    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">평가손익</span><span style="font-size:24px;font-weight:700;color:#3182f6;letter-spacing:-.01em">−₩1,560,000</span><span style="font-size:13px;color:#3182f6;font-weight:600">−4.79%</span></div>
-    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">오늘 등락</span><span style="font-size:24px;font-weight:700;color:#3182f6;letter-spacing:-.01em">−₩213,400</span><span style="font-size:13px;color:#3182f6;font-weight:600">−0.68%</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">총 평가금액</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em">{{ sum.evalS }}</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">총 매입금액</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em">{{ sum.costS }}</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">평가손익</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em;color: {{ sum.plColor }}">{{ sum.plS }}</span><span style="font-size:13px;font-weight:600;color: {{ sum.plColor }}">{{ sum.plPctS }}</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">오늘 등락</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em;color: {{ sum.dayColor }}">{{ sum.dayS }}</span><span style="font-size:13px;font-weight:600;color: {{ sum.dayColor }}">{{ sum.dayPctS }}</span></div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 372px;gap:16px;align-items:start">
     <div style="display:flex;flex-direction:column;gap:16px">
       <div style="background:#fff;border-radius:16px;padding:8px 0 12px">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 24px 12px"><span style="font-size:16px;font-weight:700">보유 종목</span><span style="font-size:12px;color:#8b95a1">행을 누르면 시뮬레이터에 연동됩니다</span></div>
-        <div style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 118px;gap:8px;padding:8px 24px;font-size:12px;color:#8b95a1;font-weight:600;border-bottom:1px solid #f2f4f6"><span>종목명</span><span style="text-align:right">보유수량</span><span style="text-align:right">평단가</span><span style="text-align:right">현재가</span><span style="text-align:right">평가손익</span><span></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px 12px">
+          <span style="display:flex;align-items:baseline;gap:12px"><span style="font-size:16px;font-weight:700">보유 종목</span><span style="font-size:12px;color:#8b95a1">행을 누르면 시뮬레이터에 연동됩니다</span></span>
+          <button onClick="{{ openAdd }}" style="border:none;background:#3182f6;color:#fff;font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit" style-hover="background:#1b64da">＋ 종목 추가</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 150px;gap:8px;padding:8px 24px;font-size:12px;color:#8b95a1;font-weight:600;border-bottom:1px solid #f2f4f6"><span>종목명</span><span style="text-align:right">보유수량</span><span style="text-align:right">평단가</span><span style="text-align:right">현재가</span><span style="text-align:right">평가손익</span><span></span></div>
         <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
-          <div onClick="{{ row.select }}" style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 118px;gap:8px;align-items:center;padding:13px 24px;cursor:pointer;background: {{ row.bg }}" style-hover="background:#f7f9fc">
+          <div onClick="{{ row.select }}" style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 150px;gap:8px;align-items:center;padding:13px 24px;cursor:pointer;background: {{ row.bg }}" style-hover="background:#f7f9fc">
             <span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">{{ row.name }}</span><span style="font-size:11.5px;color:#8b95a1">{{ row.code }}</span></span>
             <span style="text-align:right;font-size:14px">{{ row.qtyS }}</span>
             <span style="text-align:right;font-size:14px;color:#4e5968">{{ row.avgS }}</span>
             <span style="text-align:right;font-size:14px;font-weight:600">{{ row.curS }}</span>
             <span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:14px;font-weight:700;color: {{ row.color }}">{{ row.plS }}</span><span style="font-size:11.5px;color: {{ row.color }}">{{ row.plAmtS }}</span></span>
-            <button onClick="{{ row.select }}" style="justify-self:end;border:1px solid #d8dee6;background:#fff;color:#3182f6;font-weight:600;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#3182f6;background:#f2f7ff">물타기 계산</button>
+            <span style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+              <button onClick="{{ row.select }}" style="border:1px solid #d8dee6;background:#fff;color:#3182f6;font-weight:600;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#3182f6;background:#f2f7ff">물타기 계산</button>
+              <span style="position:relative">
+                <button onClick="{{ row.toggleMenu }}" aria-label="더보기" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid {{ row.menuBorder }};background: {{ row.menuBg }};color:#4e5968;border-radius:8px;cursor:pointer" style-hover="border-color:#8b95a1;color:#191f28">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg>
+                </button>
+                <sc-if value="{{ row.menuOpen }}" hint-placeholder-val="{{ false }}">
+                  <span style="position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid #eef1f5;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;display:flex;flex-direction:column;min-width:132px;z-index:30">
+                    <button onClick="{{ row.edit }}" style="display:flex;align-items:center;gap:9px;border:none;background:none;color:#191f28;font-weight:500;font-size:13px;padding:9px 10px;border-radius:7px;cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#f2f4f6">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>종목 수정
+                    </button>
+                    <button onClick="{{ row.remove }}" style="display:flex;align-items:center;gap:9px;border:none;background:none;color:#f04452;font-weight:500;font-size:13px;padding:9px 10px;border-radius:7px;cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#fdf2f3">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>종목 삭제
+                    </button>
+                  </span>
+                </sc-if>
+              </span>
+            </span>
           </div>
         </sc-for>
       </div>
@@ -53,28 +75,23 @@ input[type=range]{accent-color:#3182f6}
           <div style="font-size:15px;font-weight:700;margin-bottom:14px">섹터별 비중</div>
           <div style="display:flex;align-items:center;gap:22px">
             <svg width="164" height="164" viewBox="0 0 164 164" style="transform:rotate(-90deg)">
-              <circle cx="82" cy="82" r="70" fill="none" stroke="#33415c" stroke-width="22" stroke-dasharray="192.2 439.8" stroke-dashoffset="0"></circle>
-              <circle cx="82" cy="82" r="70" fill="none" stroke="#5a719c" stroke-width="22" stroke-dasharray="131.1 439.8" stroke-dashoffset="-192.2"></circle>
-              <circle cx="82" cy="82" r="70" fill="none" stroke="#93a6c6" stroke-width="22" stroke-dasharray="66 439.8" stroke-dashoffset="-323.3"></circle>
-              <circle cx="82" cy="82" r="70" fill="none" stroke="#cfd8e6" stroke-width="22" stroke-dasharray="50.6 439.8" stroke-dashoffset="-389.3"></circle>
+              <sc-for list="{{ donut }}" as="seg" hint-placeholder-count="4">
+                <circle cx="82" cy="82" r="70" fill="none" stroke="{{ seg.color }}" stroke-width="22" stroke-dasharray="{{ seg.dash }}" stroke-dashoffset="{{ seg.offset }}"></circle>
+              </sc-for>
             </svg>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
-              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#33415c"></span><span style="flex:1">반도체</span><span style="font-weight:700">43.7%</span></div>
-              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#5a719c"></span><span style="flex:1">인터넷</span><span style="font-weight:700">29.8%</span></div>
-              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#93a6c6"></span><span style="flex:1">자동차</span><span style="font-weight:700">15.0%</span></div>
-              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#cfd8e6"></span><span style="flex:1">금융</span><span style="font-weight:700">11.5%</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;flex:1">
+              <sc-for list="{{ donut }}" as="seg" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background: {{ seg.color }}"></span><span style="flex:1">{{ seg.name }}</span><span style="font-weight:700">{{ seg.pctS }}</span></div>
+              </sc-for>
             </div>
           </div>
         </div>
         <div style="background:#fff;border-radius:16px;padding:20px 24px">
           <div style="font-size:15px;font-weight:700;margin-bottom:16px">종목별 비중</div>
           <div style="display:flex;flex-direction:column;gap:11px;font-size:12.5px">
-            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>삼성전자</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:27.6%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">27.6%</span></div>
-            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>NAVER</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:17.6%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">17.6%</span></div>
-            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>SK하이닉스</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:16.1%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">16.1%</span></div>
-            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>현대차</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:15.0%;height:8px;background:#93a6c6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">15.0%</span></div>
-            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>카카오</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:12.2%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">12.2%</span></div>
-            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>KB금융</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:11.5%;height:8px;background:#cfd8e6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">11.5%</span></div>
+            <sc-for list="{{ weights }}" as="w" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:86px 1fr 48px;gap:10px;align-items:center"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ w.name }}</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="height:8px;border-radius:4px;width: {{ w.pctS }};background: {{ w.color }}"></div></div><span style="text-align:right;font-weight:600">{{ w.pctS }}</span></div>
+            </sc-for>
           </div>
         </div>
       </div>
@@ -116,29 +133,120 @@ input[type=range]{accent-color:#3182f6}
       </div>
     </div>
   </div>
+  <sc-if value="{{ menuBackdrop }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:25"></div>
+  </sc-if>
+  <sc-if value="{{ modal.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ modal.close }}" style="position:fixed;inset:0;background:rgba(25,31,40,.45);display:flex;align-items:center;justify-content:center;z-index:50">
+      <div onClick="{{ modal.stop }}" style="background:#fff;border-radius:20px;padding:28px;width:400px;display:flex;flex-direction:column;gap:16px;box-shadow:0 12px 40px rgba(0,0,0,.18)">
+        <span style="font-size:17px;font-weight:700">{{ modal.title }}</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8b95a1;font-weight:600">종목명
+            <input value="{{ modal.name }}" onChange="{{ modal.onName }}" placeholder="예: 삼성전자" style="width:100%;box-sizing:border-box;border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#191f28" style-focus="border-color:#3182f6">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8b95a1;font-weight:600">종목코드
+            <input value="{{ modal.code }}" onChange="{{ modal.onCode }}" placeholder="예: 005930" style="width:100%;box-sizing:border-box;border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#191f28" style-focus="border-color:#3182f6">
+          </label>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8b95a1;font-weight:600">섹터
+          <select value="{{ modal.sector }}" onChange="{{ modal.onSector }}" style="width:100%;box-sizing:border-box;border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#191f28;background:#fff">
+            <option>반도체</option><option>인터넷</option><option>자동차</option><option>금융</option><option>바이오</option><option>2차전지</option><option>기타</option>
+          </select>
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8b95a1;font-weight:600">보유수량
+            <input type="number" value="{{ modal.qty }}" onChange="{{ modal.onQty }}" placeholder="주" style="width:100%;box-sizing:border-box;border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#191f28" style-focus="border-color:#3182f6">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8b95a1;font-weight:600">평단가
+            <input type="number" value="{{ modal.avg }}" onChange="{{ modal.onAvg }}" placeholder="원" style="width:100%;box-sizing:border-box;border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#191f28" style-focus="border-color:#3182f6">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#8b95a1;font-weight:600">현재가
+            <input type="number" value="{{ modal.cur }}" onChange="{{ modal.onCur }}" placeholder="원" style="width:100%;box-sizing:border-box;border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;color:#191f28" style-focus="border-color:#3182f6">
+          </label>
+        </div>
+        <sc-if value="{{ modal.err }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size:12.5px;color:#f04452;font-weight:600">{{ modal.err }}</span>
+        </sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+          <button onClick="{{ modal.close }}" style="border:1px solid #d8dee6;background:#fff;color:#4e5968;font-weight:600;font-size:13px;padding:10px 16px;border-radius:10px;cursor:pointer;font-family:inherit" style-hover="border-color:#8b95a1">취소</button>
+          <button onClick="{{ modal.save }}" style="border:none;background:#3182f6;color:#fff;font-weight:600;font-size:13px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit" style-hover="background:#1b64da">저장</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ confirm.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ confirm.close }}" style="position:fixed;inset:0;background:rgba(25,31,40,.45);display:flex;align-items:center;justify-content:center;z-index:50">
+      <div onClick="{{ confirm.stop }}" style="background:#fff;border-radius:20px;padding:28px;width:340px;display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 40px rgba(0,0,0,.18)">
+        <span style="font-size:17px;font-weight:700">종목 삭제</span>
+        <span style="font-size:13.5px;color:#4e5968;line-height:1.6"><strong>{{ confirm.name }}</strong> 종목을 목록에서 삭제할까요? 이 작업은 되돌릴 수 없습니다.</span>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+          <button onClick="{{ confirm.close }}" style="border:1px solid #d8dee6;background:#fff;color:#4e5968;font-weight:600;font-size:13px;padding:10px 16px;border-radius:10px;cursor:pointer;font-family:inherit" style-hover="border-color:#8b95a1">취소</button>
+          <button onClick="{{ confirm.remove }}" style="border:none;background:#f04452;color:#fff;font-weight:600;font-size:13px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit" style-hover="background:#d63340">삭제</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;sliderMax&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:200,&quot;min&quot;:50,&quot;max&quot;:1000,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;시뮬레이터&quot;},&quot;includeFees&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;시뮬레이터&quot;}}">
 class Component extends DCLogic {
-  state = { sel:2, qty:30, target:'' };
-  H = [
-    {name:'삼성전자',code:'005930',qty:120,avg:78400,cur:71200},
-    {name:'SK하이닉스',code:'000660',qty:25,avg:168000,cur:199500},
-    {name:'NAVER',code:'035420',qty:30,avg:215000,cur:182300},
-    {name:'현대차',code:'005380',qty:18,avg:242000,cur:258500},
-    {name:'카카오',code:'035720',qty:90,avg:58200,cur:41850},
-    {name:'KB금융',code:'105560',qty:40,avg:72500,cur:89300},
-  ];
+  state = {
+    holdings: [
+      {name:'삼성전자',code:'005930',sector:'반도체',qty:120,avg:78400,cur:71200,prev:72100},
+      {name:'SK하이닉스',code:'000660',sector:'반도체',qty:25,avg:168000,cur:199500,prev:197000},
+      {name:'NAVER',code:'035420',sector:'인터넷',qty:30,avg:215000,cur:182300,prev:185900},
+      {name:'현대차',code:'005380',sector:'자동차',qty:18,avg:242000,cur:258500,prev:256000},
+      {name:'카카오',code:'035720',sector:'인터넷',qty:90,avg:58200,cur:41850,prev:42600},
+      {name:'KB금융',code:'105560',sector:'금융',qty:40,avg:72500,cur:89300,prev:88400},
+    ],
+    sel:2, qty:30, target:'',
+    editing:null, form:null, err:'', deleting:null, menu:null,
+  };
+  PALETTE=['#33415c','#5a719c','#93a6c6','#cfd8e6','#7d8aa5','#b4c0d3','#e2e8f0'];
   won(n){ return '₩'+Math.round(n).toLocaleString('ko-KR'); }
+  setF(k,v){ this.setState(s=>({form:Object.assign({},s.form,{[k]:v}), err:''})); }
+  openForm(i){
+    const f = i==null ? {name:'',code:'',sector:'기타',qty:'',avg:'',cur:''} :
+      (h=>({name:h.name,code:h.code,sector:h.sector,qty:''+h.qty,avg:''+h.avg,cur:''+h.cur}))(this.state.holdings[i]);
+    this.setState({editing:i==null?'new':i, form:f, err:''});
+  }
+  saveForm(){
+    const f=this.state.form, qty=+f.qty, avg=+f.avg, cur=+f.cur;
+    if(!f.name.trim()){ this.setState({err:'종목명을 입력해주세요.'}); return; }
+    if(!(qty>0)||!(avg>0)||!(cur>0)){ this.setState({err:'수량·평단가·현재가는 0보다 큰 숫자여야 합니다.'}); return; }
+    const isNew=this.state.editing==='new';
+    const item={name:f.name.trim(),code:f.code.trim()||'—',sector:f.sector,qty,avg,cur,
+      prev:isNew?cur:this.state.holdings[this.state.editing].prev};
+    this.setState(s=>{
+      const holdings=s.holdings.slice();
+      let sel=s.sel;
+      if(isNew){ holdings.push(item); sel=holdings.length-1; }
+      else holdings[s.editing]=item;
+      return {holdings, sel, editing:null, form:null, err:'', target:''};
+    });
+  }
+  doRemove(){
+    this.setState(s=>{
+      const holdings=s.holdings.filter((_,i)=>i!==s.deleting);
+      let sel=s.sel;
+      if(s.deleting<sel) sel--;
+      sel=Math.max(0,Math.min(sel,holdings.length-1));
+      return {holdings, sel, deleting:null, target:''};
+    });
+  }
   renderVals(){
-    const h=this.H[this.state.sel], q=this.state.qty;
+    const H=this.state.holdings;
+    const empty=H.length===0;
+    const sel=Math.max(0,Math.min(this.state.sel,H.length-1));
+    const h=empty?{name:'—',code:'',qty:1,avg:1,cur:1}:H[sel];
+    const q=this.state.qty;
     const fees=this.props.includeFees??false;
     const newAvg=(h.qty*h.avg+q*h.cur)/(h.qty+q);
     const need=q*h.cur*(fees?1.00015:1);
     const be=(newAvg-h.cur)/h.cur*100;
     const gap=(h.cur/h.avg-1)*100;
     const lo=Math.min(h.cur,h.avg)*0.96, hi=Math.max(h.cur,h.avg)*1.04;
-    const pos=x=>Math.max(0,Math.min(100,(x-lo)/(hi-lo)*100));
+    const pos=x=>hi===lo?50:Math.max(0,Math.min(100,(x-lo)/(hi-lo)*100));
     const P=x=>pos(x).toFixed(1)+'%';
     const cp=pos(h.cur); let nl=pos(newAvg);
     if(Math.abs(nl-cp)<14) nl=Math.max(0,Math.min(100,cp+(nl>=cp?14:-14)));
@@ -150,7 +258,36 @@ class Component extends DCLogic {
       else { const n=Math.ceil(h.qty*(h.avg-t)/(t-h.cur)); tRes=n.toLocaleString('ko-KR')+'주 추가 매수 시 평단 '+this.won(t)+' 달성 — '+this.won(n*h.cur)+' 필요'; }
     }
     const up=be>0;
+    const tEval=H.reduce((a,x)=>a+x.cur*x.qty,0);
+    const tCost=H.reduce((a,x)=>a+x.avg*x.qty,0);
+    const tPrev=H.reduce((a,x)=>a+x.prev*x.qty,0);
+    const pl=tEval-tCost, day=tEval-tPrev;
+    const sgn=(v,s)=>(v>0?'+':v<0?'−':'')+s;
+    const col=v=>v>0?'#f04452':v<0?'#3182f6':'#4e5968';
+    const secMap={};
+    H.forEach(x=>{ secMap[x.sector]=(secMap[x.sector]||0)+x.cur*x.qty; });
+    const secs=Object.entries(secMap).sort((a,b)=>b[1]-a[1]);
+    const CIRC=439.8;
+    let acc=0;
+    const donut=secs.map(([name,v],i)=>{
+      const frac=tEval?v/tEval:0;
+      const seg={name, color:this.PALETTE[i%this.PALETTE.length], pctS:(frac*100).toFixed(1)+'%',
+        dash:(frac*CIRC).toFixed(1)+' '+CIRC, offset:(-acc*CIRC).toFixed(1)};
+      acc+=frac;
+      return seg;
+    });
+    const secColor={};
+    donut.forEach(d=>{ secColor[d.name]=d.color; });
+    const weights=H.map(x=>({name:x.name, pctS:(tEval?x.cur*x.qty/tEval*100:0).toFixed(1)+'%', color:secColor[x.sector]||'#93a6c6', v:x.cur*x.qty}))
+      .sort((a,b)=>b.v-a.v);
+    const f=this.state.form||{};
+    const del=this.state.deleting;
     return {
+      sum:{
+        evalS:this.won(tEval), costS:this.won(tCost),
+        plS:sgn(pl,this.won(Math.abs(pl))), plPctS:tCost?sgn(pl,(Math.abs(pl)/tCost*100).toFixed(2)+'%'):'—', plColor:col(pl),
+        dayS:sgn(day,this.won(Math.abs(day))), dayPctS:tPrev?sgn(day,(Math.abs(day)/tPrev*100).toFixed(2)+'%'):'—', dayColor:col(day),
+      },
       sim:{
         name:h.name, code:h.code, curS:this.won(h.cur), avgS:this.won(h.avg),
         gapS:(gap>0?'+':'')+gap.toFixed(2)+'%',
@@ -165,19 +302,52 @@ class Component extends DCLogic {
         onQty:e=>this.setState({qty:+e.target.value}),
         onTarget:e=>this.setState({target:e.target.value}),
       },
-      rows:this.H.map((h2,i)=>{
-        const pl=(h2.cur/h2.avg-1)*100, amt=(h2.cur-h2.avg)*h2.qty;
+      rows:H.map((h2,i)=>{
+        const pl2=(h2.cur/h2.avg-1)*100, amt=(h2.cur-h2.avg)*h2.qty;
         return {
           name:h2.name, code:h2.code,
           qtyS:h2.qty.toLocaleString('ko-KR')+'주',
           avgS:this.won(h2.avg), curS:this.won(h2.cur),
-          plS:(pl>0?'+':'')+pl.toFixed(2)+'%',
+          plS:(pl2>0?'+':'')+pl2.toFixed(2)+'%',
           plAmtS:(amt>0?'+':'−')+this.won(Math.abs(amt)),
-          color:pl>0?'#f04452':'#3182f6',
-          bg:this.state.sel===i?'#f2f7ff':'transparent',
-          select:()=>this.setState({sel:i,target:''}),
+          color:pl2>0?'#f04452':'#3182f6',
+          bg:sel===i&&!empty?'#f2f7ff':'transparent',
+          menuOpen:this.state.menu===i,
+          menuBorder:this.state.menu===i?'#8b95a1':'#d8dee6',
+          menuBg:this.state.menu===i?'#f2f4f6':'#fff',
+          select:()=>this.setState({sel:i,target:'',menu:null}),
+          toggleMenu:e=>{ e.stopPropagation(); this.setState(s=>({menu:s.menu===i?null:i})); },
+          edit:e=>{ e.stopPropagation(); this.setState({menu:null}); this.openForm(i); },
+          remove:e=>{ e.stopPropagation(); this.setState({deleting:i,menu:null}); },
         };
       }),
+      donut, weights,
+      menuBackdrop:this.state.menu!=null,
+      closeMenu:()=>this.setState({menu:null}),
+      openAdd:()=>this.openForm(null),
+      modal:{
+        open:this.state.editing!=null,
+        title:this.state.editing==='new'?'종목 추가':'종목 수정',
+        name:f.name||'', code:f.code||'', sector:f.sector||'기타',
+        qty:f.qty||'', avg:f.avg||'', cur:f.cur||'',
+        err:this.state.err,
+        onName:e=>this.setF('name',e.target.value),
+        onCode:e=>this.setF('code',e.target.value),
+        onSector:e=>this.setF('sector',e.target.value),
+        onQty:e=>this.setF('qty',e.target.value),
+        onAvg:e=>this.setF('avg',e.target.value),
+        onCur:e=>this.setF('cur',e.target.value),
+        save:()=>this.saveForm(),
+        close:()=>this.setState({editing:null,form:null,err:''}),
+        stop:e=>e.stopPropagation(),
+      },
+      confirm:{
+        open:del!=null,
+        name:del!=null&&H[del]?H[del].name:'',
+        remove:()=>this.doRemove(),
+        close:()=>this.setState({deleting:null}),
+        stop:e=>e.stopPropagation(),
+      },
     };
   }
 }

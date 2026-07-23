@@ -23,9 +23,6 @@ export function MarketHeader() {
     <header className="flex items-center justify-between pt-6">
       <div className="flex items-baseline gap-2.5">
         <span className="text-[22px] font-extrabold tracking-[-0.02em]">물타기</span>
-        <span className="text-muted-foreground text-xs font-medium">
-          mool-ta-gi · 포트폴리오 관제
-        </span>
       </div>
 
       <div className="flex gap-6 text-[13px]">
