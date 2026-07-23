@@ -3,6 +3,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import boundaries from 'eslint-plugin-boundaries';
 import pluginQuery from '@tanstack/eslint-plugin-query';
+import unusedImports from 'eslint-plugin-unused-imports';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 /**
@@ -33,6 +34,35 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   ...pluginQuery.configs['flat/recommended'],
+  /*
+   * 미사용 import 자동 제거.
+   *
+   * @typescript-eslint/no-unused-vars도 미사용 import를 잡아내지만 auto-fix가 없어서
+   * `--fix`로 지워지지 않는다. 그 자리를 이 플러그인이 대신하므로 import에 대해서는
+   * 원래 규칙을 끄고 중복 보고를 막는다.
+   *
+   * import는 지워도 동작이 변하지 않으니 error로 올려 자동 정리하고,
+   * 지역 변수·인자는 지우는 순간 의미가 바뀔 수 있어 warn으로 남겨 사람이 판단하게 둔다.
+   */
+  {
+    files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
+    plugins: { 'unused-imports': unusedImports },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          args: 'after-used',
+          // _ 접두사는 '의도적으로 안 쓴다'는 표시로 통용된다
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
   {
     files: ['app/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
     plugins: { boundaries },
