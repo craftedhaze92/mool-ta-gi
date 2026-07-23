@@ -53,8 +53,11 @@ export interface AllocationSlice {
 export interface AveragingResult {
   /** 추가 매수 후 평단가 */
   newAvgPrice: number;
-  /** 평단가 하락률(%). 항상 0 이상 */
-  avgDropRate: number;
+  /**
+   * 평단가 변화율(%). 음수면 평단이 내려간 것(물타기 성공),
+   * 양수면 현재가가 평단보다 높아 오히려 평단이 올라간 경우다.
+   */
+  avgChangeRate: number;
   /** 추가 매수에 필요한 금액 */
   requiredAmount: number;
   /** 본전까지 필요한 상승률(%). 음수면 이미 수익권 */

@@ -24,6 +24,15 @@ function StatCell({ label, value, tone }: { label: string; value: string; tone?:
   );
 }
 
+function ResultRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-bold">{children}</span>
+    </div>
+  );
+}
+
 export function AveragingPanel() {
   const { selectedCode, addQuantity, targetAvgInput, setAddQuantity, setTargetAvgInput } =
     useSelectedHoldingStore();
@@ -31,7 +40,7 @@ export function AveragingPanel() {
   const holding = MOCK_HOLDINGS.find((h) => h.code === selectedCode) ?? MOCK_HOLDINGS[0];
   const result = calcAveraging(holding, addQuantity);
   const gapRate = calcPriceGapRate(holding);
-  const isProfit = result.breakEvenRate <= 0;
+  const needsRise = result.breakEvenRate > 0;
 
   const targetQuantity = calcQuantityForTargetAverage(holding, Number(targetAvgInput));
   const targetMessage = buildTargetMessage(
@@ -42,16 +51,16 @@ export function AveragingPanel() {
   );
 
   return (
-    <aside className="bg-panel sticky top-5 flex flex-col gap-[18px] rounded-[20px] p-[26px] text-white">
+    <aside className="bg-card sticky top-5 flex flex-col gap-[18px] rounded-2xl p-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-base font-bold">물타기 시뮬레이터</h2>
         <span className="flex items-baseline gap-[7px]">
-          <span className="text-panel-accent text-[15px] font-bold">{holding.name}</span>
+          <span className="text-brand text-[15px] font-bold">{holding.name}</span>
           <span className="text-muted-foreground text-xs">{holding.code}</span>
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 rounded-xl bg-white/6 px-4 py-3.5 text-xs">
+      <div className="bg-subtle grid grid-cols-3 gap-2 rounded-xl px-4 py-3.5 text-xs">
         <StatCell label="현재가" value={formatWon(holding.currentPrice)} />
         <StatCell label="평단가" value={formatWon(holding.avgPrice)} />
         <StatCell
@@ -72,8 +81,8 @@ export function AveragingPanel() {
 
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between">
-          <span className="text-panel-label text-[13px] font-semibold">현재가에 추가 매수</span>
-          <span className="text-panel-accent text-base font-extrabold">
+          <span className="text-[13px] font-semibold">현재가에 추가 매수</span>
+          <span className="text-brand text-[15px] font-extrabold">
             {formatQuantity(addQuantity)}
           </span>
         </div>
@@ -84,42 +93,39 @@ export function AveragingPanel() {
           step={1}
           onValueChange={([value]) => setAddQuantity(value)}
           aria-label="추가 매수 수량"
-          // 다크 카드 위라 shadcn 기본 트랙/레인지 색을 덮어쓴다
-          className="[&_[data-slot=slider-range]]:bg-panel-accent [&_[data-slot=slider-track]]:bg-white/12"
+          className="[&_[data-slot=slider-track]]:bg-track"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1 rounded-xl bg-white/6 p-3.5">
-          <span className="text-muted-foreground text-[11.5px]">새 평단가</span>
-          <AnimatedNumber
-            value={result.newAvgPrice}
-            format={formatWon}
-            className="text-[17px] font-extrabold"
-          />
-          <span className="text-panel-accent text-[11.5px] font-semibold">
-            −{result.avgDropRate.toFixed(2)}%
+      <div className="flex flex-col gap-2.5 border-t pt-4 text-[13.5px]">
+        <ResultRow label="새 평단가">
+          <AnimatedNumber value={result.newAvgPrice} format={formatWon} />{' '}
+          <span
+            className={cn(
+              'text-xs font-semibold',
+              result.avgChangeRate > 0 ? 'text-up' : 'text-down',
+            )}
+          >
+            {formatPercent(result.avgChangeRate, { signed: true })}
           </span>
-        </div>
+        </ResultRow>
 
-        <div className="flex flex-col gap-1 rounded-xl bg-white/6 p-3.5">
-          <span className="text-muted-foreground text-[11.5px]">필요 금액</span>
-          <AnimatedNumber
-            value={result.requiredAmount}
-            format={formatWon}
-            className="text-[17px] font-extrabold"
-          />
-          <span className="text-muted-foreground text-[11.5px]">
-            손익분기{' '}
-            <span className={cn('font-bold', isProfit ? 'text-up' : 'text-white')}>
-              {isProfit ? '이미 수익권' : `+${result.breakEvenRate.toFixed(2)}%`}
-            </span>
+        <ResultRow label="필요 금액">
+          <AnimatedNumber value={result.requiredAmount} format={formatWon} />
+        </ResultRow>
+
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">손익분기</span>
+          <span className={cn('font-bold', needsRise ? 'text-up' : 'text-down')}>
+            {needsRise
+              ? `+${result.breakEvenRate.toFixed(2)}% 상승 시 본전`
+              : '이미 수익권 (평단 < 현재가)'}
           </span>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-white/10 pt-4">
-        <label htmlFor="target-avg" className="text-panel-label text-[13px] font-semibold">
+      <div className="flex flex-col gap-2 border-t pt-4">
+        <label htmlFor="target-avg" className="text-[13px] font-semibold">
           목표 평단가 역산
         </label>
         <input
@@ -129,9 +135,9 @@ export function AveragingPanel() {
           placeholder="목표 평단가 (원)"
           value={targetAvgInput}
           onChange={(event) => setTargetAvgInput(event.target.value)}
-          className="focus:border-panel-accent rounded-[10px] border border-white/18 bg-white/6 px-3 py-2.5 text-sm outline-none placeholder:text-white/40"
+          className="border-hairline focus:border-brand placeholder:text-muted-foreground rounded-[10px] border px-3 py-2.5 text-sm outline-none"
         />
-        <span className="text-[12.5px] leading-relaxed text-white/70">{targetMessage}</span>
+        <span className="text-muted-strong text-[12.5px] leading-relaxed">{targetMessage}</span>
       </div>
     </aside>
   );

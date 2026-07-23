@@ -34,7 +34,7 @@ function toPositions({ currentPrice, avgPrice, newAvgPrice }: GapGaugeProps) {
 }
 
 const MARKER =
-  'absolute -top-[5px] size-3.5 -translate-x-1/2 rounded-full border-[3px] border-panel';
+  'absolute -top-[5px] size-3.5 -translate-x-1/2 rounded-full border-[3px] border-white shadow-[0_1px_3px_rgba(0,0,0,0.2)]';
 
 /** 현재가 · 기존 평단 · 새 평단의 위치 관계를 한 줄로 보여주는 게이지 */
 export function GapGauge(props: GapGaugeProps) {
@@ -42,26 +42,27 @@ export function GapGauge(props: GapGaugeProps) {
   const spring = { type: 'spring', stiffness: 260, damping: 30 } as const;
 
   return (
-    <div className="mx-1.5 mt-[30px] mb-7">
-      <div className="relative h-1.5 rounded-[3px] bg-white/12">
+    // 위쪽 여백은 '기존 평단' 라벨(-26px)이 섹션 제목과 겹치지 않을 만큼 준다
+    <div className="mx-1.5 mt-8 mb-7">
+      <div className="bg-track relative h-1.5 rounded-[3px]">
         <motion.span
-          className={`${MARKER} bg-panel-accent`}
+          className={`${MARKER} bg-brand`}
           animate={{ left: `${pos.current}%` }}
           transition={spring}
         />
         <motion.span
-          className={`${MARKER} bg-panel-dot`}
+          className={`${MARKER} bg-[#b0b8c1]`}
           animate={{ left: `${pos.avg}%` }}
           transition={spring}
         />
         <motion.span
-          className={`${MARKER} bg-white`}
+          className={`${MARKER} bg-foreground`}
           animate={{ left: `${pos.newAvg}%` }}
           transition={spring}
         />
 
         <motion.span
-          className="text-panel-accent absolute top-3.5 -translate-x-1/2 text-[10.5px] font-semibold whitespace-nowrap"
+          className="text-brand absolute top-3.5 -translate-x-1/2 text-[10.5px] font-semibold whitespace-nowrap"
           animate={{ left: `${pos.current}%` }}
           transition={spring}
         >
@@ -75,7 +76,7 @@ export function GapGauge(props: GapGaugeProps) {
           기존 평단
         </motion.span>
         <motion.span
-          className="absolute top-3.5 -translate-x-1/2 text-[10.5px] font-bold whitespace-nowrap text-white"
+          className="text-foreground absolute top-3.5 -translate-x-1/2 text-[10.5px] font-bold whitespace-nowrap"
           animate={{ left: `${pos.newAvgLabel}%` }}
           transition={spring}
         >

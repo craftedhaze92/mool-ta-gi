@@ -92,7 +92,7 @@ describe('calcAveraging', () => {
     // (120×78,400 + 30×71,200) / 150 = 76,960
     expect(r.newAvgPrice).toBeCloseTo(76_960, 6);
     expect(r.requiredAmount).toBe(2_136_000);
-    expect(r.avgDropRate).toBeCloseTo(1.8367, 3);
+    expect(r.avgChangeRate).toBeCloseTo(-1.8367, 3);
     expect(r.breakEvenRate).toBeCloseTo(8.0899, 3);
   });
 
@@ -101,7 +101,16 @@ describe('calcAveraging', () => {
 
     expect(r.newAvgPrice).toBe(samsung.avgPrice);
     expect(r.requiredAmount).toBe(0);
-    expect(r.avgDropRate).toBe(0);
+    expect(r.avgChangeRate).toBe(0);
+  });
+
+  it('현재가가 평단보다 높으면 평단이 오히려 올라간다', () => {
+    // 현대차: 평단 242,000 < 현재가 258,500
+    const hyundai = MOCK_HOLDINGS[3];
+    const r = calcAveraging(hyundai, 30);
+
+    expect(r.newAvgPrice).toBeGreaterThan(hyundai.avgPrice);
+    expect(r.avgChangeRate).toBeGreaterThan(0);
   });
 
   it('이미 수익권이면 손익분기 상승률이 음수다', () => {

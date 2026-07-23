@@ -107,7 +107,7 @@ export function calcAveraging(holding: Holding, addQuantity: number): AveragingR
 
   return {
     newAvgPrice,
-    avgDropRate: Math.max(0, 100 - safeRate(newAvgPrice, holding.avgPrice)),
+    avgChangeRate: safeRate(newAvgPrice - holding.avgPrice, holding.avgPrice),
     requiredAmount: add * holding.currentPrice,
     breakEvenRate: safeRate(newAvgPrice - holding.currentPrice, holding.currentPrice),
   };

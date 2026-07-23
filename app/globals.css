@@ -68,12 +68,6 @@
   --color-sector-2: #5a719c;
   --color-sector-3: #93a6c6;
   --color-sector-4: #cfd8e6;
-
-  /* 다크 시뮬레이터 카드 (테마와 무관하게 고정) */
-  --color-panel: #191f28;
-  --color-panel-accent: #7aa9f8;
-  --color-panel-label: #c9d1d9;
-  --color-panel-dot: #5c6570;
 }
 
 @theme inline {
