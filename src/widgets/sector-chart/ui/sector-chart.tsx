@@ -103,7 +103,7 @@ export function SectorChart() {
           </div>
 
           {/* 세로로 쌓일 때는 범례가 한 줄씩 늘어지지 않게 2열로 접는다 */}
-          <ul className="grid w-full min-w-0 grid-cols-2 gap-x-4 gap-y-2 text-[13px] @min-[300px]:flex @min-[300px]:flex-1 @min-[300px]:flex-col @min-[300px]:gap-2.5">
+          <ul className="grid w-full min-w-0 grid-cols-2 gap-x-4 gap-y-2 text-[13px] tabular-nums @min-[300px]:flex @min-[300px]:flex-1 @min-[300px]:flex-col @min-[300px]:gap-2.5">
             {slices.map((slice) => (
               <li key={slice.key} className="flex items-center gap-2">
                 <span

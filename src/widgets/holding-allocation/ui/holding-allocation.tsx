@@ -51,7 +51,7 @@ export function HoldingAllocation() {
     <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
       <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
 
-      <ul className="flex flex-col gap-[11px] text-[12.5px]">
+      <ul className="flex flex-col gap-[11px] text-[12.5px] tabular-nums">
         {slices.map((slice, index) => (
           <li
             key={slice.key}

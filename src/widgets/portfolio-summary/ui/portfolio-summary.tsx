@@ -17,7 +17,7 @@ function SummaryCard({ label, value, sub, tone }: SummaryCardProps) {
   const toneClass = tone === 'up' ? 'text-up' : tone === 'down' ? 'text-down' : undefined;
 
   return (
-    <div className="bg-card flex flex-col gap-1.5 rounded-2xl px-4 py-4 lg:gap-2 lg:px-[22px] lg:py-5">
+    <div className="bg-card flex flex-col gap-1.5 rounded-2xl px-4 py-4 tabular-nums lg:gap-2 lg:px-[22px] lg:py-5">
       <span className="text-muted-foreground text-xs font-medium lg:text-[13px]">{label}</span>
       {/*
        * 카드가 가장 좁아지는 건 4칸이 되는 lg 직후다. 거기서 ₩24,414,000이 카드를 넘지 않는

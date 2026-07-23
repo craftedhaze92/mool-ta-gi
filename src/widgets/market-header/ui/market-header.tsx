@@ -35,7 +35,7 @@ export function MarketHeader() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs sm:gap-x-6 sm:text-[13px]">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums sm:gap-x-6 sm:text-[13px]">
         {MOCK_MARKET_INDICES.map((quote) => (
           <IndexQuote key={quote.name} quote={quote} />
         ))}

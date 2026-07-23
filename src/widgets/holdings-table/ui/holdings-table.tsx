@@ -13,9 +13,12 @@ import { cn } from '@/shared/lib/utils';
  *
  * md 미만에서는 같은 셀 6개를 2열 3행으로 접어 카드처럼 보여준다. 마크업(셀 순서, role="row")은
  * 그대로 두고 배치 클래스만 바꾸는 방식이라, 화면 폭에 따라 DOM이 갈라지지 않는다.
+ *
+ * tabular-nums는 상속되므로 여기 한 번만 붙이면 모든 숫자 셀이 고정폭으로 정렬된다.
+ * 자릿수가 달라져도 열이 흔들리지 않아야 한다.
  */
 const GRID =
-  'grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 md:grid-cols-[1.5fr_0.7fr_1fr_1fr_1.2fr_150px] md:gap-2';
+  'grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 tabular-nums md:grid-cols-[1.5fr_0.7fr_1fr_1fr_1.2fr_150px] md:gap-2';
 
 /** md에서 원래의 자동 배치로 되돌린다. 셀마다 붙는 공통 꼬리표. */
 const CELL_RESET = 'md:col-auto md:row-auto';

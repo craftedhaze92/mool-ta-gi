@@ -39,7 +39,8 @@ function ResultRow({ label, children }: { label: string; children: React.ReactNo
  * @container를 걸어 내부 배치가 뷰포트가 아니라 패널 자기 폭에 반응하게 한다
  * (md~xl 구간에서는 전폭이라 2단, xl 이상에서는 372px이라 1단).
  */
-const PANEL = '@container bg-card flex flex-col rounded-2xl p-5 md:p-6 xl:sticky xl:top-5';
+const PANEL =
+  '@container bg-card flex flex-col rounded-2xl p-5 tabular-nums md:p-6 xl:sticky xl:top-5';
 
 /** 계산할 종목이 없을 때. 시뮬레이터 UI 전체를 감추고 안내만 남긴다. */
 function EmptyPanel() {
