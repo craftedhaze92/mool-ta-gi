@@ -137,6 +137,15 @@ Conventional Commits를 따른다. 작업은 단계별로 쪼개서 커밋한다
 | `docs`     | 문서                     |
 | `style`    | 포맷팅                   |
 
+규칙:
+
+- **`<type>:` 뒤의 제목은 한글로 쓴다.** type 키워드 자체는 영문 그대로 둔다.
+  - ✅ `chore: FSD 5레이어 디렉토리 구조 추가`
+  - ❌ `chore: add FSD layer directory structure`
+- 본문(body)도 한글로 쓴다. 라이브러리·파일·설정 키 이름 등 고유명사는 원문 유지.
+- 제목 끝에 마침표를 찍지 않는다.
+- `Co-Authored-By`, `Generated with` 등 도구가 붙이는 트레일러는 넣지 않는다.
+
 ## 명령어
 
 ```bash
