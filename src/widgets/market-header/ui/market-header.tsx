@@ -26,9 +26,12 @@ function IndexQuote({ quote }: { quote: MarketIndex }) {
 
 export function MarketHeader() {
   return (
-    <header className="flex items-center justify-between pt-6">
+    <header className="flex flex-wrap items-center justify-between gap-y-3 pt-6">
       <div className="flex items-baseline gap-2.5">
-        <span className="text-[22px] font-extrabold tracking-[-0.02em]">물타기</span>
+        <h1 className="text-[22px] font-extrabold tracking-[-0.02em]">평단구조대</h1>
+        <p className="text-muted-foreground hidden text-[13px] font-medium sm:block">
+          최적의 평단가를 찾아주는 주식 물타기 시뮬레이터
+        </p>
       </div>
 
       <div className="flex gap-6 text-[13px]">
