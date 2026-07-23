@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useHoldingsStore, type Holding } from '@/entities/holding';
@@ -81,6 +82,33 @@ function rowOf(name: string) {
 }
 
 describe('DashboardPage', () => {
+  /*
+   * 스켈레톤은 SSR HTML 그 자체다. persist가 skipHydration이라 서버는 항상 게이트가 닫힌
+   * 상태로 렌더하고, JS 하이드레이션이 끝날 때까지 사용자는 이 화면만 본다.
+   * 느린 회선에서 몇 초씩 이어지므로 '로딩 중'으로 읽혀야 한다.
+   *
+   * jsdom에서는 render() 시점에 effect가 곧바로 flush되어 게이트가 열려버리므로,
+   * 클라이언트 렌더가 아니라 서버 렌더 결과를 직접 확인한다.
+   */
+  it('서버 렌더 결과는 로딩 스켈레톤이다', () => {
+    const html = renderToStaticMarkup(<DashboardPage />);
+
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('불러오는 중');
+    expect(html).toContain('data-slot="skeleton"');
+
+    // 실데이터는 물론, 실제 문구도 새어나가면 안 된다.
+    // 스켈레톤이 '보유 종목'을 흉내내면 하이드레이션 판정 신호가 흐려진다.
+    expect(html).not.toContain('삼성전자');
+    expect(html).not.toContain('보유 종목');
+  });
+
+  it('복원이 끝나면 스켈레톤이 사라진다', async () => {
+    await renderDashboard();
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('요약 카드에 스토어 파생 수치를 표시한다', async () => {
     await renderDashboard();
 

@@ -1,12 +1,12 @@
 'use client';
 
 import { useHoldingsHydrated } from '@/entities/holding';
-import { AveragingPanel } from '@/widgets/averaging-panel';
-import { HoldingAllocation } from '@/widgets/holding-allocation';
-import { HoldingsTable } from '@/widgets/holdings-table';
+import { AveragingPanel, AveragingPanelSkeleton } from '@/widgets/averaging-panel';
+import { HoldingAllocation, HoldingAllocationSkeleton } from '@/widgets/holding-allocation';
+import { HoldingsTable, HoldingsTableSkeleton } from '@/widgets/holdings-table';
 import { MarketHeader } from '@/widgets/market-header';
-import { PortfolioSummary } from '@/widgets/portfolio-summary';
-import { SectorChart } from '@/widgets/sector-chart';
+import { PortfolioSummary, PortfolioSummarySkeleton } from '@/widgets/portfolio-summary';
+import { SectorChart, SectorChartSkeleton } from '@/widgets/sector-chart';
 
 /**
  * 본문 3덩어리(테이블 / 시뮬레이터 / 차트)의 배치.
@@ -18,27 +18,44 @@ import { SectorChart } from '@/widgets/sector-chart';
 const BODY_GRID = 'flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_372px] xl:items-start';
 
 /**
- * localStorage 복원 전에 보여줄 자리. 실제 위젯과 같은 골격이라 복원 후 레이아웃이 튀지 않는다.
- * 수치를 그리지 않으므로 서버 HTML과 클라이언트 첫 렌더가 항상 일치한다.
+ * localStorage 복원 전에 보여줄 자리.
+ *
+ * 이 화면은 잠깐 스치는 게 아니다. persist가 skipHydration이라 서버는 항상 게이트가
+ * 닫힌 상태로 HTML을 만들고, JS 하이드레이션이 끝날 때까지 이게 계속 보인다.
+ * 느린 회선에서는 몇 초씩 이어지므로 '로딩 중'으로 읽히게 만들어야 한다.
+ *
+ * 배치는 실제 렌더와 같은 BODY_GRID·배치 클래스를 그대로 쓴다. 위젯 스켈레톤들도
+ * 각자 실제 위젯의 컨테이너 클래스를 공유하므로, 높이를 하드코딩하지 않아도
+ * 반응형 높이가 따라오고 복원 순간 레이아웃이 튀지 않는다.
+ *
+ * 수치는 물론 실제 문구도 그리지 않으므로 서버 HTML과 클라이언트 첫 렌더가 항상 일치한다.
  */
 function DashboardSkeleton() {
   return (
-    <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-card h-[96px] rounded-2xl lg:h-[108px]" />
-        ))}
-      </div>
+    /*
+     * 바깥이 flex flex-col gap-4라 래퍼가 하나 끼면 간격이 어긋난다.
+     * display:contents로 래퍼를 레이아웃에서 지우고 role만 남긴다.
+     */
+    <div role="status" aria-busy="true" className="contents">
+      <span className="sr-only">불러오는 중</span>
+
+      <PortfolioSummarySkeleton />
 
       <div className={BODY_GRID}>
-        <div className="bg-card h-[420px] rounded-2xl md:h-[340px] xl:col-start-1 xl:row-start-1" />
-        <div className="bg-card h-[560px] rounded-2xl xl:col-start-2 xl:row-span-2 xl:row-start-1" />
+        <div className="xl:col-start-1 xl:row-start-1">
+          <HoldingsTableSkeleton />
+        </div>
+
+        <div className="xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:self-stretch">
+          <AveragingPanelSkeleton />
+        </div>
+
         <div className="grid gap-4 md:grid-cols-[1fr_1.2fr] xl:col-start-1 xl:row-start-2">
-          <div className="bg-card h-[236px] rounded-2xl" />
-          <div className="bg-card h-[236px] rounded-2xl" />
+          <SectorChartSkeleton />
+          <HoldingAllocationSkeleton />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
