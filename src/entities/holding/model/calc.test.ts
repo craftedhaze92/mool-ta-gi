@@ -10,11 +10,11 @@ import {
   calcWeightedAverage,
   pickNextSelectedId,
 } from './calc';
-import { MOCK_HOLDINGS } from './mock';
+import { HOLDING_FIXTURES } from './holdings.fixture';
 import type { Holding } from './types';
 
-const samsung = MOCK_HOLDINGS[0]; // 손실 구간
-const hynix = MOCK_HOLDINGS[1]; // 수익 구간
+const samsung = HOLDING_FIXTURES[0]; // 손실 구간
+const hynix = HOLDING_FIXTURES[1]; // 수익 구간
 
 describe('calcHoldingMetrics', () => {
   it('손실 종목의 지표를 계산한다', () => {
@@ -46,7 +46,7 @@ describe('calcHoldingMetrics', () => {
 
 describe('calcPortfolioSummary', () => {
   it('목데이터 전체를 합산한다', () => {
-    const s = calcPortfolioSummary(MOCK_HOLDINGS);
+    const s = calcPortfolioSummary(HOLDING_FIXTURES);
 
     expect(s.totalCost).toBe(24_414_000);
     expect(s.totalValue).toBe(23_653_500);
@@ -65,7 +65,7 @@ describe('calcPortfolioSummary', () => {
 
 describe('calcSectorAllocation', () => {
   it('섹터별로 묶고 비중 내림차순으로 정렬한다', () => {
-    const slices = calcSectorAllocation(MOCK_HOLDINGS);
+    const slices = calcSectorAllocation(HOLDING_FIXTURES);
 
     expect(slices.map((s) => s.label)).toEqual(['반도체', '인터넷', '자동차']);
     expect(slices[0].value).toBe(8_544_000 + 4_987_500);
@@ -73,14 +73,14 @@ describe('calcSectorAllocation', () => {
   });
 
   it('비중 합은 100%다', () => {
-    const total = calcSectorAllocation(MOCK_HOLDINGS).reduce((sum, s) => sum + s.ratio, 0);
+    const total = calcSectorAllocation(HOLDING_FIXTURES).reduce((sum, s) => sum + s.ratio, 0);
     expect(total).toBeCloseTo(100, 6);
   });
 });
 
 describe('calcHoldingAllocation', () => {
   it('종목별 비중을 내림차순으로 돌려준다', () => {
-    const slices = calcHoldingAllocation(MOCK_HOLDINGS);
+    const slices = calcHoldingAllocation(HOLDING_FIXTURES);
 
     expect(slices.map((s) => s.label)).toEqual(['삼성전자', 'NAVER', 'SK하이닉스', '현대차']);
     expect(slices[0].ratio).toBeCloseTo(36.12, 1);
@@ -108,7 +108,7 @@ describe('calcAveraging', () => {
 
   it('현재가가 평단보다 높으면 평단이 오히려 올라간다', () => {
     // 현대차: 평단 242,000 < 현재가 258,500
-    const hyundai = MOCK_HOLDINGS[3];
+    const hyundai = HOLDING_FIXTURES[3];
     const r = calcAveraging(hyundai, 30);
 
     expect(r.newAvgPrice).toBeGreaterThan(hyundai.avgPrice);
@@ -192,7 +192,7 @@ describe('calcWeightedAverage', () => {
 });
 
 describe('pickNextSelectedId', () => {
-  const [a, b, c] = MOCK_HOLDINGS;
+  const [a, b, c] = HOLDING_FIXTURES;
   const list = [a, b, c];
 
   it('선택 중이 아닌 종목을 지우면 선택은 그대로다', () => {

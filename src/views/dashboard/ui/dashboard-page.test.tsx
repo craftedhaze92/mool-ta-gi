@@ -1,19 +1,70 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { useHoldingsStore } from '@/entities/holding';
+import { useHoldingsStore, type Holding } from '@/entities/holding';
 import { DashboardPage } from '../index';
 
 /**
+ * 화면 검증용 고정 데이터.
+ *
+ * 프로덕션 seed(entities/holding의 mock)를 쓰지 않는다. seed는 데모에 보일 값이라
+ * 시세가 바뀔 때마다 갱신되는데, 그때마다 여기 박힌 금액 단언이 함께 깨지기 때문이다.
+ * entities 내부 파일은 FSD 규칙상 views에서 import할 수 없어 지역 상수로 둔다.
+ */
+const FIXTURES: Holding[] = [
+  {
+    id: 'seed-005930',
+    code: '005930',
+    name: '삼성전자',
+    sector: '반도체',
+    quantity: 120,
+    avgPrice: 78_400,
+    currentPrice: 71_200,
+    prevClose: 72_300,
+  },
+  {
+    id: 'seed-000660',
+    code: '000660',
+    name: 'SK하이닉스',
+    sector: '반도체',
+    quantity: 25,
+    avgPrice: 168_000,
+    currentPrice: 199_500,
+    prevClose: 198_000,
+  },
+  {
+    id: 'seed-035420',
+    code: '035420',
+    name: 'NAVER',
+    sector: '인터넷',
+    quantity: 30,
+    avgPrice: 215_000,
+    currentPrice: 182_300,
+    prevClose: 185_000,
+  },
+  {
+    id: 'seed-005380',
+    code: '005380',
+    name: '현대차',
+    sector: '자동차',
+    quantity: 18,
+    avgPrice: 242_000,
+    currentPrice: 258_500,
+    prevClose: 258_000,
+  },
+];
+
+/**
  * 스토어는 싱글턴이고 persist가 localStorage를 물고 있어서
- * 테스트마다 저장소와 상태를 seed로 되돌린다.
+ * 테스트마다 저장소와 상태를 픽스처로 되돌린다.
  */
 beforeEach(() => {
   localStorage.clear();
-  const seed = useHoldingsStore.getInitialState();
   useHoldingsStore.setState({
-    ...seed,
-    holdings: seed.holdings.map((h) => ({ ...h })),
+    holdings: FIXTURES.map((h) => ({ ...h })),
+    selectedId: FIXTURES[0].id,
+    addQuantity: 30,
+    targetAvgInput: '',
   });
 });
 

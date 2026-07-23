@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useHoldingsStore } from './holdings-store';
-import { MOCK_HOLDINGS } from './mock';
+import { HOLDING_FIXTURES } from './holdings.fixture';
 import { NO_CODE, type HoldingInput } from './types';
 
 const KAKAO: HoldingInput = {
@@ -16,8 +16,8 @@ const KAKAO: HoldingInput = {
 beforeEach(() => {
   localStorage.clear();
   useHoldingsStore.setState({
-    holdings: MOCK_HOLDINGS.map((h) => ({ ...h })),
-    selectedId: MOCK_HOLDINGS[0].id,
+    holdings: HOLDING_FIXTURES.map((h) => ({ ...h })),
+    selectedId: HOLDING_FIXTURES[0].id,
     addQuantity: 30,
     targetAvgInput: '',
   });
@@ -53,7 +53,7 @@ describe('addHolding', () => {
 
 describe('updateHolding', () => {
   it('입력값으로 덮어쓰되 전일 종가는 보존한다', () => {
-    const target = MOCK_HOLDINGS[0];
+    const target = HOLDING_FIXTURES[0];
 
     state().updateHolding(target.id, {
       name: '삼성전자',
@@ -81,7 +81,7 @@ describe('updateHolding', () => {
 
 describe('mergeHolding', () => {
   it('수량은 더하고 평단가는 가중평균으로 갱신한다', () => {
-    const samsung = MOCK_HOLDINGS[0]; // 120주 @ 78,400
+    const samsung = HOLDING_FIXTURES[0]; // 120주 @ 78,400
 
     state().mergeHolding(samsung.id, { ...KAKAO, quantity: 30, avgPrice: 71_200 });
 
@@ -94,7 +94,7 @@ describe('mergeHolding', () => {
   });
 
   it('전일 종가는 기존값을 유지한다', () => {
-    const samsung = MOCK_HOLDINGS[0];
+    const samsung = HOLDING_FIXTURES[0];
     state().mergeHolding(samsung.id, { ...KAKAO, quantity: 10, avgPrice: 70_000 });
 
     expect(state().holdings[0].prevClose).toBe(samsung.prevClose);
@@ -103,22 +103,22 @@ describe('mergeHolding', () => {
 
 describe('removeHolding', () => {
   it('선택 중이 아닌 종목을 지우면 선택이 유지된다', () => {
-    state().selectHolding(MOCK_HOLDINGS[1].id);
-    state().removeHolding(MOCK_HOLDINGS[3].id);
+    state().selectHolding(HOLDING_FIXTURES[1].id);
+    state().removeHolding(HOLDING_FIXTURES[3].id);
 
     expect(state().holdings).toHaveLength(3);
-    expect(state().selectedId).toBe(MOCK_HOLDINGS[1].id);
+    expect(state().selectedId).toBe(HOLDING_FIXTURES[1].id);
   });
 
   it('선택 중인 종목을 지우면 인접 종목으로 옮겨간다', () => {
-    state().selectHolding(MOCK_HOLDINGS[0].id);
-    state().removeHolding(MOCK_HOLDINGS[0].id);
+    state().selectHolding(HOLDING_FIXTURES[0].id);
+    state().removeHolding(HOLDING_FIXTURES[0].id);
 
-    expect(state().selectedId).toBe(MOCK_HOLDINGS[1].id);
+    expect(state().selectedId).toBe(HOLDING_FIXTURES[1].id);
   });
 
   it('마지막 한 건까지 지우면 선택이 없어진다', () => {
-    for (const holding of MOCK_HOLDINGS) state().removeHolding(holding.id);
+    for (const holding of HOLDING_FIXTURES) state().removeHolding(holding.id);
 
     expect(state().holdings).toHaveLength(0);
     expect(state().selectedId).toBeNull();
