@@ -19,7 +19,7 @@ function IndexQuote({ quote }: { quote: MarketIndex }) {
       </span>
       <span className={cn('font-semibold', tone)}>
         <span aria-hidden="true">{arrow}</span>
-        {Math.abs(quote.change).toFixed(2)} {formatPercent(quote.changeRate, { signed: true })}
+        {Math.abs(quote.change).toFixed(2)} ({formatPercent(quote.changeRate, { signed: true })})
       </span>
     </div>
   );
