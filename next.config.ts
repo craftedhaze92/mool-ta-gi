@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  // React Compiler로 리렌더링 자동 최적화 (babel-plugin-react-compiler 필요)
+  reactCompiler: true,
 };
 
 export default nextConfig;
