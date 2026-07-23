@@ -1,13 +1,28 @@
-import { Button } from '@/shared/ui/button';
+import { AveragingPanel } from '@/widgets/averaging-panel';
+import { HoldingAllocation } from '@/widgets/holding-allocation';
+import { HoldingsTable } from '@/widgets/holdings-table';
+import { MarketHeader } from '@/widgets/market-header';
+import { PortfolioSummary } from '@/widgets/portfolio-summary';
+import { SectorChart } from '@/widgets/sector-chart';
 
 export function DashboardPage() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight">mool-ta-gi 🚀 세팅 완료</h1>
-      <p className="text-muted-foreground max-w-md text-sm">
-        국내 주식 포트폴리오 트래커 + 물타기 시뮬레이터. 아직 기능은 없습니다.
-      </p>
-      <Button disabled>포트폴리오 추가 (준비 중)</Button>
-    </main>
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-10 pb-10">
+      <MarketHeader />
+      <PortfolioSummary />
+
+      <div className="grid grid-cols-[1fr_372px] items-start gap-4">
+        <div className="flex flex-col gap-4">
+          <HoldingsTable />
+
+          <div className="grid grid-cols-[1fr_1.2fr] gap-4">
+            <SectorChart />
+            <HoldingAllocation />
+          </div>
+        </div>
+
+        <AveragingPanel />
+      </div>
+    </div>
   );
 }
