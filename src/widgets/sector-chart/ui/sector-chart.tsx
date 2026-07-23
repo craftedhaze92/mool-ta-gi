@@ -1,8 +1,15 @@
 'use client';
 
-import { Pie, PieChart, ResponsiveContainer } from 'recharts';
-import { calcSectorAllocation, SECTORS, useHoldingsStore, type Sector } from '@/entities/holding';
-import { formatPercent } from '@/shared/lib/format-won';
+import { Pie, PieChart, ResponsiveContainer, Tooltip, type TooltipContentProps } from 'recharts';
+import {
+  calcSectorAllocation,
+  SECTORS,
+  useHoldingsStore,
+  type AllocationSlice,
+  type Sector,
+} from '@/entities/holding';
+import { formatPercent, formatWon } from '@/shared/lib/format-won';
+import { ChartTooltip } from '@/shared/ui/chart-tooltip';
 
 /**
  * 섹터별 고정 색상. app/globals.css의 --color-sector-* 와 같은 값이다
@@ -24,6 +31,27 @@ const SECTOR_COLORS: Record<Sector, string> = {
 /** SECTORS에 없는 섹터가 저장돼 있어도 화면이 깨지지 않게 한다. */
 function colorOf(sector: string): string {
   return SECTOR_COLORS[sector as Sector] ?? SECTOR_COLORS[SECTORS[SECTORS.length - 1]];
+}
+
+/**
+ * hover한 조각의 평가금액을 띄운다.
+ *
+ * 비중(%)은 범례가 이미 모든 섹터에 대해 보여주고 있으므로, 툴팁은 범례에 없는
+ * 금액을 주 수치로 둔다. 그러지 않으면 같은 정보를 두 번 말하는 셈이 된다.
+ */
+function SectorTooltip({ active, payload }: TooltipContentProps) {
+  if (!active || payload.length === 0) return null;
+
+  const slice = payload[0].payload as AllocationSlice;
+
+  return (
+    <ChartTooltip
+      label={slice.label}
+      value={formatWon(slice.value)}
+      sub={formatPercent(slice.ratio, { digits: 1 })}
+      swatch={colorOf(slice.key)}
+    />
+  );
 }
 
 export function SectorChart() {
@@ -64,6 +92,7 @@ export function SectorChart() {
                   isAnimationActive
                   animationDuration={600}
                 />
+                <Tooltip content={SectorTooltip} />
               </PieChart>
             </ResponsiveContainer>
           </div>

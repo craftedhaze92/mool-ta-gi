@@ -2,7 +2,8 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import { calcHoldingAllocation, useHoldingsStore } from '@/entities/holding';
-import { formatPercent } from '@/shared/lib/format-won';
+import { formatPercent, formatWon } from '@/shared/lib/format-won';
+import { ChartTooltip } from '@/shared/ui/chart-tooltip';
 
 /**
  * 순차(ordinal) 램프. app/globals.css의 --color-ramp-* 와 같은 값이다.
@@ -55,13 +56,31 @@ export function HoldingAllocation() {
           <li key={slice.key} className="grid grid-cols-[76px_1fr_44px] items-center gap-2.5">
             <span className="truncate">{slice.label}</span>
 
-            <div className="bg-track h-2 rounded">
-              <motion.div
-                className="h-2 rounded"
-                style={{ backgroundColor: rampColor(index, slices.length) }}
-                initial={prefersReducedMotion ? false : { width: 0 }}
-                animate={{ width: `${slice.ratio}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut', delay: index * 0.05 }}
+            {/*
+             * 툴팁을 hover뿐 아니라 focus에도 띄운다. hover 전용으로 두면 키보드
+             * 사용자는 금액을 볼 방법이 없다(비중 %는 오른쪽에 항상 보인다).
+             */}
+            <div
+              tabIndex={0}
+              aria-label={`${slice.label} 평가금액 ${formatWon(slice.value)}`}
+              className="group/bar focus-visible:ring-brand relative rounded outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
+              <div className="bg-track h-2 rounded">
+                <motion.div
+                  className="h-2 rounded"
+                  style={{ backgroundColor: rampColor(index, slices.length) }}
+                  initial={prefersReducedMotion ? false : { width: 0 }}
+                  animate={{ width: `${slice.ratio}%` }}
+                  transition={{ duration: 0.5, ease: 'easeOut', delay: index * 0.05 }}
+                />
+              </div>
+
+              <ChartTooltip
+                label={slice.label}
+                value={formatWon(slice.value)}
+                sub={formatPercent(slice.ratio, { digits: 1 })}
+                swatch={rampColor(index, slices.length)}
+                className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 group-hover/bar:block group-focus-visible/bar:block"
               />
             </div>
 
