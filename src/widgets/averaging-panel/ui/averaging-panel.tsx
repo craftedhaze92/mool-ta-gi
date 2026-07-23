@@ -12,6 +12,7 @@ import { formatPercent, formatQuantity, formatWon } from '@/shared/lib/format-wo
 import { AnimatedNumber } from '@/shared/ui/animated-number';
 import { Slider } from '@/shared/ui/slider';
 import { cn } from '@/shared/lib/utils';
+import { PANEL, PANEL_RIGHT_COLUMN, PANEL_SPLIT } from '../lib/panel';
 import { GapGauge } from './gap-gauge';
 
 const SLIDER_MAX = 200;
@@ -33,14 +34,6 @@ function ResultRow({ label, children }: { label: string; children: React.ReactNo
     </div>
   );
 }
-
-/**
- * 패널 루트. sticky는 우측 사이드바가 되는 xl 이상에서만 의미가 있다.
- * @container를 걸어 내부 배치가 뷰포트가 아니라 패널 자기 폭에 반응하게 한다
- * (md~xl 구간에서는 전폭이라 2단, xl 이상에서는 372px이라 1단).
- */
-const PANEL =
-  '@container bg-card flex flex-col rounded-2xl p-5 tabular-nums md:p-6 xl:sticky xl:top-5';
 
 /** 계산할 종목이 없을 때. 시뮬레이터 UI 전체를 감추고 안내만 남긴다. */
 function EmptyPanel() {
@@ -89,7 +82,7 @@ export function AveragingPanel() {
        * 패널이 672px보다 넓어지면(md~xl 구간의 전폭 배치) 입력부와 결과부를 좌우로 나눈다.
        * 그러지 않으면 짧은 행들이 가로로 늘어져 읽는 거리가 쓸데없이 길어진다.
        */}
-      <div className="flex flex-col gap-[18px] @2xl:grid @2xl:grid-cols-2 @2xl:items-start @2xl:gap-6">
+      <div className={PANEL_SPLIT}>
         <div className="flex flex-col gap-[18px]">
           <div className="bg-subtle grid grid-cols-3 gap-2 rounded-xl px-4 py-3.5 text-xs">
             <StatCell label="현재가" value={formatWon(holding.currentPrice)} />
@@ -130,7 +123,7 @@ export function AveragingPanel() {
         </div>
 
         {/* 2단일 때는 위아래 구분선 대신 좌우 구분선이 두 덩어리를 가른다 */}
-        <div className="flex flex-col gap-[18px] @2xl:border-l @2xl:pl-6">
+        <div className={PANEL_RIGHT_COLUMN}>
           <div className="flex flex-col gap-2.5 border-t pt-4 text-[13.5px] @2xl:border-t-0 @2xl:pt-0">
             <ResultRow label="새 평단가">
               <AnimatedNumber value={result.newAvgPrice} format={formatWon} />{' '}
