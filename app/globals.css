@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * 색상 토큰은 docs/design/v2 의 .dc.html 시안에서 추출했다.
+ * 색상 토큰은 v2 디자인 시안에서 추출했다.
  * 이번 단계는 라이트 전용이므로 .dark 블록은 유지만 하고 사용하지 않는다.
  */
 :root {

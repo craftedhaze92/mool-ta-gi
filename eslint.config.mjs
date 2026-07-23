@@ -138,8 +138,6 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
-    // 디자인 시안은 참고 자료 전용 — 빌드/린트 대상이 아니다
-    'docs/**',
   ]),
   eslintConfigPrettier,
 ]);

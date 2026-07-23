@@ -5,6 +5,3 @@ coverage
 node_modules
 pnpm-lock.yaml
 next-env.d.ts
-
-# 디자인 시안 (참고 자료 전용)
-docs/design

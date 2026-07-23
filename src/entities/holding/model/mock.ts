@@ -1,7 +1,7 @@
 import type { Holding } from './types';
 
 /**
- * 최초 seed 데이터. 수치는 docs/design/v2 시안에서 그대로 가져왔다.
+ * 최초 seed 데이터. 수치는 v2 디자인 시안에서 그대로 가져왔다.
  *
  * localStorage에 저장된 값이 없을 때만 스토어의 초기 상태로 쓰인다.
  * id는 SSR/테스트에서 값이 흔들리지 않도록 고정 문자열로 박아둔다.
