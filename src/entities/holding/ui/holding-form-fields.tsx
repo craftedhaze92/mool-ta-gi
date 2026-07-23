@@ -25,7 +25,7 @@ export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormVal
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className={LABEL}>
           종목명
           <Input {...register('name')} placeholder="예: 삼성전자" className={FIELD} />

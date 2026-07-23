@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { QueryProvider } from '@/shared/api';
 import { ThemeProvider } from '@/shared/ui/theme-provider';
@@ -27,6 +27,12 @@ export const metadata: Metadata = {
     description: '감으로 물타지 말고, 계산하고 물타세요.',
     images: ['/og-image.png'],
   },
+};
+
+/** 반응형 레이아웃의 전제. Next.js 기본값과 같지만 의도를 명시해 둔다. */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

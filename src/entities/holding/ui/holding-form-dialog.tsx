@@ -40,7 +40,7 @@ export function HoldingFormDialog({ open, onOpenChange, editing }: HoldingFormDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-4 rounded-[20px] p-7 sm:max-w-[400px]">
+      <DialogContent className="gap-4 rounded-[20px] p-5 sm:max-w-[400px] sm:p-7">
         <DialogHeader>
           <DialogTitle className="text-[17px] font-bold">{title}</DialogTitle>
           <DialogDescription className="sr-only">

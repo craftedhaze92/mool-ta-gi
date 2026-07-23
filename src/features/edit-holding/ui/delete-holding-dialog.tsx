@@ -24,7 +24,7 @@ export function DeleteHoldingDialog({ open, onOpenChange, holding }: DeleteHoldi
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="gap-3.5 rounded-[20px] p-7 sm:max-w-[340px]">
+      <AlertDialogContent className="gap-3.5 rounded-[20px] p-5 sm:max-w-[340px] sm:p-7">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-[17px] font-bold">종목 삭제</AlertDialogTitle>
           <AlertDialogDescription className="text-muted-strong text-[13.5px] leading-relaxed">
