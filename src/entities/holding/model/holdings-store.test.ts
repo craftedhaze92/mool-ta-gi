@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useHoldingsStore } from './holdings-store';
 import { HOLDING_FIXTURES } from './holdings.fixture';
+// 마이그레이션 테스트는 'seed로 떨어지는가'를 확인하므로 seed 자체를 참조해야 한다.
+import { MOCK_HOLDINGS } from './mock';
 import { NO_CODE, type HoldingInput } from './types';
 
 const KAKAO: HoldingInput = {
@@ -133,6 +135,38 @@ describe('persist', () => {
 
     expect(Object.keys(saved.state)).toEqual(['holdings']);
     expect(saved.state.holdings).toHaveLength(5);
+  });
+
+  /** 저장된 payload를 직접 심어 rehydrate가 어떻게 처리하는지 본다. */
+  const seedStorage = (version: number) =>
+    localStorage.setItem(
+      'multagi-holdings',
+      JSON.stringify({
+        version,
+        state: { holdings: [{ ...HOLDING_FIXTURES[0], name: '옛날데이터', quantity: 999 }] },
+      }),
+    );
+
+  it('현재 version 저장값은 그대로 복원한다', async () => {
+    seedStorage(2);
+
+    await useHoldingsStore.persist.rehydrate();
+
+    expect(state().holdings).toHaveLength(1);
+    expect(state().holdings[0]).toMatchObject({ name: '옛날데이터', quantity: 999 });
+  });
+
+  /*
+   * seed를 갱신해도 기존 사용자가 옛 종목을 계속 보는 문제를 version으로 끊는다.
+   * 값이 아니라 'seed와 같아지는가'로 단언해야 seed를 또 고쳐도 이 테스트가 살아남는다.
+   */
+  it('옛 version 저장값은 버리고 seed로 떨어진다', async () => {
+    seedStorage(1);
+
+    await useHoldingsStore.persist.rehydrate();
+
+    expect(state().holdings).toEqual(MOCK_HOLDINGS);
+    expect(state().holdings.map((h) => h.name)).not.toContain('옛날데이터');
   });
 });
 

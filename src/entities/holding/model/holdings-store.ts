@@ -120,10 +120,26 @@ export const useHoldingsStore = create(
     ),
     {
       name: 'multagi-holdings',
-      version: 1,
+      /*
+       * seed(mock.ts)를 갱신할 때 함께 올린다.
+       *
+       * seed는 '저장된 값이 없을 때만' 쓰이므로, 앱을 한 번이라도 연 브라우저는
+       * 옛 종목을 계속 들고 있어 새 seed를 영영 보지 못한다. version이 달라지면
+       * 저장값을 버리고 seed로 떨어지게 해서 그 상태를 끊는다.
+       *
+       * 아직 목데이터 단계라 이렇게 둔다. 실사용자가 자기 종목을 넣기 시작하면
+       * seed 갱신 때문에 남의 포트폴리오를 지우는 셈이 되므로, 그때는 version을
+       * 올리지 말고 seed를 '예시 데이터'로 따로 격리해야 한다.
+       */
+      version: 2,
       skipHydration: true,
       // 선택 상태와 슬라이더 값은 세션 한정이라 저장하지 않는다.
       partialize: (state) => ({ holdings: state.holdings }),
+      /*
+       * 옛 버전 저장값은 옮기지 않고 버린다. migrate를 아예 주지 않아도 zustand가
+       * 저장값을 무시하긴 하지만 콘솔에 error를 찍으므로, 의도한 폐기임을 명시한다.
+       */
+      migrate: () => ({ holdings: MOCK_HOLDINGS }),
     },
   ),
 );
