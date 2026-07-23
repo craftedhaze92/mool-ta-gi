@@ -4,30 +4,38 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * 색상 토큰은 docs/design/v2 의 .dc.html 시안에서 추출했다.
+ * 이번 단계는 라이트 전용이므로 .dark 블록은 유지만 하고 사용하지 않는다.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --background: #f2f4f6; /* 페이지 캔버스 */
+  --foreground: #191f28;
+  --card: #ffffff;
+  --card-foreground: #191f28;
+  --popover: #ffffff;
+  --popover-foreground: #191f28;
+  --primary: #3182f6;
+  --primary-foreground: #ffffff;
+  --secondary: #f7f8fa;
+  --secondary-foreground: #191f28;
+  --muted: #f7f8fa;
+  --muted-foreground: #8b95a1;
+  --accent: #f2f7ff;
+  --accent-foreground: #3182f6;
+  --destructive: #f04452;
+  --border: #f2f4f6;
+  --input: #d8dee6;
+  --ring: #3182f6;
+  --chart-1: #33415c;
+  --chart-2: #5a719c;
+  --chart-3: #93a6c6;
+  --chart-4: #cfd8e6;
+  --chart-5: #eef1f5;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -37,6 +45,35 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* 시안 전용 토큰 — Tailwind 유틸리티(bg-up, text-down ...)로 노출된다 */
+@theme {
+  /* 한국 증시 컨벤션: 이익·상승 = 빨강, 손실·하락 = 파랑 */
+  --color-up: #f04452;
+  --color-down: #3182f6;
+
+  --color-brand: #3182f6;
+  --color-brand-hover: #1b64da;
+
+  --color-canvas: #f2f4f6;
+  --color-subtle: #f7f8fa;
+  --color-row-hover: #f7f9fc;
+  --color-row-active: #f2f7ff;
+  --color-track: #eef1f5;
+  --color-hairline: #d8dee6;
+  --color-muted-strong: #4e5968;
+
+  --color-sector-1: #33415c;
+  --color-sector-2: #5a719c;
+  --color-sector-3: #93a6c6;
+  --color-sector-4: #cfd8e6;
+
+  /* 다크 시뮬레이터 카드 (테마와 무관하게 고정) */
+  --color-panel: #191f28;
+  --color-panel-accent: #7aa9f8;
+  --color-panel-label: #c9d1d9;
+  --color-panel-dot: #5c6570;
 }
 
 @theme inline {
@@ -81,19 +118,6 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .dark {

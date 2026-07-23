@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+body{margin:0;background:#eef0f4;font-family:"Pretendard Variable",Pretendard,-apple-system,sans-serif;color:#191f28}
+a{color:#3182f6;text-decoration:none}a:hover{color:#1b64da}
+input[type=range]{accent-color:#3182f6}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 inherit;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 inherit;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#f7f8fa;border:1px solid rgba(0,0,0,.08);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 inherit;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">물타기 메인 대시보드 — 라이트 미니멀, 상승=빨강·하락=파랑, 시뮬레이터 3안 모두 실동작 (행 클릭 연동)</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>클래식 관제형 — 요약 카드 4장 + 우측 고정 시뮬레이터</div>
+<div class="dv-card" style="width:1440px">
+<div data-screen-label="1a 클래식 관제형" style="display:flex;flex-direction:column;gap:20px;padding:0 32px 32px">
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 0">
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span style="font-size:21px;font-weight:800;letter-spacing:-.02em">물타기</span>
+      <span style="font-size:12px;color:#8b95a1;font-weight:500">mool-ta-gi · 포트폴리오 관제</span>
+    </div>
+    <div style="display:flex;gap:24px;font-size:13px">
+      <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSPI</span><span style="font-weight:700">3,214.56</span><span style="color:#3182f6;font-weight:600">▼18.24 −0.56%</span></div>
+      <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSDAQ</span><span style="font-weight:700">912.34</span><span style="color:#f04452;font-weight:600">▲4.12 +0.45%</span></div>
+    </div>
+  </header>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">총 평가금액</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em">₩30,992,000</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">총 매입금액</span><span style="font-size:24px;font-weight:700;letter-spacing:-.01em">₩32,552,000</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">평가손익</span><span style="font-size:24px;font-weight:700;color:#3182f6;letter-spacing:-.01em">−₩1,560,000</span><span style="font-size:13px;color:#3182f6;font-weight:600">−4.79%</span></div>
+    <div style="background:#fff;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;color:#8b95a1;font-weight:500">오늘 등락</span><span style="font-size:24px;font-weight:700;color:#3182f6;letter-spacing:-.01em">−₩213,400</span><span style="font-size:13px;color:#3182f6;font-weight:600">−0.68%</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 372px;gap:16px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:#fff;border-radius:16px;padding:8px 0 12px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 24px 12px"><span style="font-size:16px;font-weight:700">보유 종목</span><span style="font-size:12px;color:#8b95a1">행을 누르면 시뮬레이터에 연동됩니다</span></div>
+        <div style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 118px;gap:8px;padding:8px 24px;font-size:12px;color:#8b95a1;font-weight:600;border-bottom:1px solid #f2f4f6"><span>종목명</span><span style="text-align:right">보유수량</span><span style="text-align:right">평단가</span><span style="text-align:right">현재가</span><span style="text-align:right">평가손익</span><span></span></div>
+        <sc-for list="{{ rowsA }}" as="row" hint-placeholder-count="6">
+          <div onClick="{{ row.select }}" style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 118px;gap:8px;align-items:center;padding:13px 24px;cursor:pointer;background: {{ row.bg }}" style-hover="background:#f7f9fc">
+            <span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">{{ row.name }}</span><span style="font-size:11.5px;color:#8b95a1">{{ row.code }}</span></span>
+            <span style="text-align:right;font-size:14px">{{ row.qtyS }}</span>
+            <span style="text-align:right;font-size:14px;color:#4e5968">{{ row.avgS }}</span>
+            <span style="text-align:right;font-size:14px;font-weight:600">{{ row.curS }}</span>
+            <span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:14px;font-weight:700;color: {{ row.color }}">{{ row.plS }}</span><span style="font-size:11.5px;color: {{ row.color }}">{{ row.plAmtS }}</span></span>
+            <button onClick="{{ row.select }}" style="justify-self:end;border:1px solid #d8dee6;background:#fff;color:#3182f6;font-weight:600;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#3182f6;background:#f2f7ff">물타기 계산</button>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:16px">
+        <div style="background:#fff;border-radius:16px;padding:20px 24px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:14px">섹터별 비중</div>
+          <div style="display:flex;align-items:center;gap:22px">
+            <svg width="164" height="164" viewBox="0 0 164 164" style="transform:rotate(-90deg)">
+              <circle cx="82" cy="82" r="70" fill="none" stroke="#33415c" stroke-width="22" stroke-dasharray="192.2 439.8" stroke-dashoffset="0"></circle>
+              <circle cx="82" cy="82" r="70" fill="none" stroke="#5a719c" stroke-width="22" stroke-dasharray="131.1 439.8" stroke-dashoffset="-192.2"></circle>
+              <circle cx="82" cy="82" r="70" fill="none" stroke="#93a6c6" stroke-width="22" stroke-dasharray="66 439.8" stroke-dashoffset="-323.3"></circle>
+              <circle cx="82" cy="82" r="70" fill="none" stroke="#cfd8e6" stroke-width="22" stroke-dasharray="50.6 439.8" stroke-dashoffset="-389.3"></circle>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#33415c"></span><span style="flex:1">반도체</span><span style="font-weight:700">43.7%</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#5a719c"></span><span style="flex:1">인터넷</span><span style="font-weight:700">29.8%</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#93a6c6"></span><span style="flex:1">자동차</span><span style="font-weight:700">15.0%</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#cfd8e6"></span><span style="flex:1">금융</span><span style="font-weight:700">11.5%</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:20px 24px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">종목별 비중</div>
+          <div style="display:flex;flex-direction:column;gap:11px;font-size:12.5px">
+            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>삼성전자</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:27.6%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">27.6%</span></div>
+            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>NAVER</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:17.6%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">17.6%</span></div>
+            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>SK하이닉스</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:16.1%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">16.1%</span></div>
+            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>현대차</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:15.0%;height:8px;background:#93a6c6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">15.0%</span></div>
+            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>카카오</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:12.2%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">12.2%</span></div>
+            <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>KB금융</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:11.5%;height:8px;background:#cfd8e6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">11.5%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:16px;font-weight:700">물타기 시뮬레이터</span>
+        <span style="display:flex;gap:7px;align-items:baseline"><span style="font-size:15px;font-weight:700;color:#3182f6">{{ simA.name }}</span><span style="font-size:12px;color:#8b95a1">{{ simA.code }}</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#f7f8fa;border-radius:12px;padding:14px 16px;font-size:12px">
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="color:#8b95a1">현재가</span><span style="font-size:14px;font-weight:700">{{ simA.curS }}</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="color:#8b95a1">평단가</span><span style="font-size:14px;font-weight:700">{{ simA.avgS }}</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="color:#8b95a1">평단 대비</span><span style="font-size:14px;font-weight:700;color: {{ simA.gapColor }}">{{ simA.gapS }}</span></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:12px;color:#8b95a1;font-weight:600">현재가 · 평단 갭</span>
+        <div style="position:relative;height:6px;background:#eef1f5;border-radius:3px;margin:14px 6px 28px">
+          <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#3182f6;border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transform:translateX(-50%);left: {{ simA.gCur }}"></span>
+          <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#b0b8c1;border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transform:translateX(-50%);left: {{ simA.gAvg }}"></span>
+          <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#191f28;border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transform:translateX(-50%);left: {{ simA.gNew }}"></span>
+          <span style="position:absolute;top:14px;font-size:10.5px;color:#3182f6;font-weight:600;transform:translateX(-50%);white-space:nowrap;left: {{ simA.gCur }}">현재가</span>
+          <span style="position:absolute;top:-26px;font-size:10.5px;color:#8b95a1;font-weight:600;transform:translateX(-50%);white-space:nowrap;left: {{ simA.gAvg }}">기존 평단</span>
+          <span style="position:absolute;top:14px;font-size:10.5px;color:#191f28;font-weight:700;transform:translateX(-50%);white-space:nowrap;left: {{ simA.gNewL }}">새 평단</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600">현재가에 추가 매수</span><span style="font-size:15px;font-weight:800;color:#3182f6">{{ simA.qtyS }}주</span></div>
+        <input type="range" min="1" max="{{ simA.max }}" value="{{ simA.qty }}" onChange="{{ simA.onQty }}" style="width:100%;margin:0">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid #f2f4f6;padding-top:16px;font-size:13.5px">
+        <div style="display:flex;justify-content:space-between"><span style="color:#8b95a1">새 평단가</span><span style="font-weight:700">{{ simA.newAvgS }} <span style="color:#3182f6;font-weight:600;font-size:12px">{{ simA.dropS }}</span></span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#8b95a1">필요 금액</span><span style="font-weight:700">{{ simA.needS }}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#8b95a1">손익분기</span><span style="font-weight:700;color: {{ simA.beColor }}">{{ simA.beS }}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #f2f4f6;padding-top:16px">
+        <span style="font-size:13px;font-weight:600">목표 평단가 역산</span>
+        <input type="number" placeholder="목표 평단가 (원)" value="{{ simA.target }}" onChange="{{ simA.onTarget }}" style="border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none" style-focus="border-color:#3182f6">
+        <span style="font-size:12.5px;color:#4e5968;line-height:1.5">{{ simA.tRes }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>시뮬레이터 중심 — 히어로 손익 + 좌측 대형 계산기</div>
+<div class="dv-card" style="width:1440px">
+<div data-screen-label="1b 시뮬레이터 중심" style="display:flex;flex-direction:column;gap:20px;padding:0 32px 32px">
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 0">
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span style="font-size:21px;font-weight:800;letter-spacing:-.02em">물타기</span>
+      <span style="font-size:12px;color:#8b95a1;font-weight:500">mool-ta-gi</span>
+    </div>
+    <div style="display:flex;gap:24px;font-size:13px">
+      <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSPI</span><span style="font-weight:700">3,214.56</span><span style="color:#3182f6;font-weight:600">▼0.56%</span></div>
+      <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSDAQ</span><span style="font-weight:700">912.34</span><span style="color:#f04452;font-weight:600">▲0.45%</span></div>
+    </div>
+  </header>
+  <div style="background:#fff;border-radius:20px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:14px;color:#8b95a1;font-weight:500">총 평가금액</span>
+      <span style="font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1.1">₩30,992,000</span>
+      <span style="display:inline-flex;gap:8px;align-items:center;margin-top:6px"><span style="background:#eef4fe;color:#3182f6;font-weight:700;font-size:14px;padding:6px 12px;border-radius:999px">−₩1,560,000 (−4.79%)</span><span style="font-size:13px;color:#8b95a1">평가손익</span></span>
+    </div>
+    <div style="display:flex;gap:40px">
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:13px;color:#8b95a1">총 매입금액</span><span style="font-size:20px;font-weight:700">₩32,552,000</span></div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:13px;color:#8b95a1">오늘 등락</span><span style="font-size:20px;font-weight:700;color:#3182f6">−₩213,400 <span style="font-size:13px">−0.68%</span></span></div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:13px;color:#8b95a1">보유 종목</span><span style="font-size:20px;font-weight:700">6종목</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:420px 1fr;gap:16px;align-items:start">
+    <div style="background:#191f28;color:#fff;border-radius:20px;padding:26px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:16px;font-weight:700">물타기 시뮬레이터</span>
+        <span style="display:flex;gap:7px;align-items:baseline"><span style="font-size:15px;font-weight:700;color:#7aa9f8">{{ simB.name }}</span><span style="font-size:12px;color:#8b95a1">{{ simB.code }}</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:rgba(255,255,255,.06);border-radius:12px;padding:14px 16px;font-size:12px">
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="color:#8b95a1">현재가</span><span style="font-size:14px;font-weight:700">{{ simB.curS }}</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="color:#8b95a1">평단가</span><span style="font-size:14px;font-weight:700">{{ simB.avgS }}</span></span>
+        <span style="display:flex;flex-direction:column;gap:3px"><span style="color:#8b95a1">평단 대비</span><span style="font-size:14px;font-weight:700;color: {{ simB.gapColorDark }}">{{ simB.gapS }}</span></span>
+      </div>
+      <div style="position:relative;height:6px;background:rgba(255,255,255,.12);border-radius:3px;margin:30px 6px 28px">
+        <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#7aa9f8;border:3px solid #191f28;transform:translateX(-50%);left: {{ simB.gCur }}"></span>
+        <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#5c6570;border:3px solid #191f28;transform:translateX(-50%);left: {{ simB.gAvg }}"></span>
+        <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid #191f28;transform:translateX(-50%);left: {{ simB.gNew }}"></span>
+        <span style="position:absolute;top:14px;font-size:10.5px;color:#7aa9f8;font-weight:600;transform:translateX(-50%);white-space:nowrap;left: {{ simB.gCur }}">현재가</span>
+        <span style="position:absolute;top:-26px;font-size:10.5px;color:#8b95a1;font-weight:600;transform:translateX(-50%);white-space:nowrap;left: {{ simB.gAvg }}">기존 평단</span>
+        <span style="position:absolute;top:14px;font-size:10.5px;color:#fff;font-weight:700;transform:translateX(-50%);white-space:nowrap;left: {{ simB.gNewL }}">새 평단</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600;color:#c9d1d9">현재가에 추가 매수</span><span style="font-size:16px;font-weight:800;color:#7aa9f8">{{ simB.qtyS }}주</span></div>
+        <input type="range" min="1" max="{{ simB.max }}" value="{{ simB.qty }}" onChange="{{ simB.onQty }}" style="width:100%;margin:0">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px"><span style="font-size:11.5px;color:#8b95a1">새 평단가</span><span style="font-size:17px;font-weight:800">{{ simB.newAvgS }}</span><span style="font-size:11.5px;color:#7aa9f8;font-weight:600">{{ simB.dropS }}</span></div>
+        <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px"><span style="font-size:11.5px;color:#8b95a1">필요 금액</span><span style="font-size:17px;font-weight:800">{{ simB.needS }}</span><span style="font-size:11.5px;color:#8b95a1">손익분기 <span style="color:#fff;font-weight:700">{{ simB.beShortS }}</span></span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">
+        <span style="font-size:13px;font-weight:600;color:#c9d1d9">목표 평단가 역산</span>
+        <input type="number" placeholder="목표 평단가 (원)" value="{{ simB.target }}" onChange="{{ simB.onTarget }}" style="border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none" style-focus="border-color:#7aa9f8">
+        <span style="font-size:12.5px;color:#c9d1d9;line-height:1.5">{{ simB.tRes }}</span>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:8px 0 12px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 24px 12px"><span style="font-size:16px;font-weight:700">보유 종목</span><span style="font-size:12px;color:#8b95a1">행 클릭 → 계산기 연동</span></div>
+      <div style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr;gap:8px;padding:8px 24px;font-size:12px;color:#8b95a1;font-weight:600;border-bottom:1px solid #f2f4f6"><span>종목명</span><span style="text-align:right">보유수량</span><span style="text-align:right">평단가</span><span style="text-align:right">현재가</span><span style="text-align:right">평가손익</span></div>
+      <sc-for list="{{ rowsB }}" as="row" hint-placeholder-count="6">
+        <div onClick="{{ row.select }}" style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr;gap:8px;align-items:center;padding:14px 24px;cursor:pointer;background: {{ row.bg }}" style-hover="background:#f7f9fc">
+          <span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">{{ row.name }}</span><span style="font-size:11.5px;color:#8b95a1">{{ row.code }}</span></span>
+          <span style="text-align:right;font-size:14px">{{ row.qtyS }}</span>
+          <span style="text-align:right;font-size:14px;color:#4e5968">{{ row.avgS }}</span>
+          <span style="text-align:right;font-size:14px;font-weight:600">{{ row.curS }}</span>
+          <span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:14px;font-weight:700;color: {{ row.color }}">{{ row.plS }}</span><span style="font-size:11.5px;color: {{ row.color }}">{{ row.plAmtS }}</span></span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:16px">
+    <div style="background:#fff;border-radius:20px;padding:20px 24px;display:flex;align-items:center;gap:24px">
+      <svg width="150" height="150" viewBox="0 0 164 164" style="transform:rotate(-90deg);flex:none">
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#33415c" stroke-width="22" stroke-dasharray="192.2 439.8" stroke-dashoffset="0"></circle>
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#5a719c" stroke-width="22" stroke-dasharray="131.1 439.8" stroke-dashoffset="-192.2"></circle>
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#93a6c6" stroke-width="22" stroke-dasharray="66 439.8" stroke-dashoffset="-323.3"></circle>
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#cfd8e6" stroke-width="22" stroke-dasharray="50.6 439.8" stroke-dashoffset="-389.3"></circle>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;flex:1">
+        <div style="font-size:15px;font-weight:700;margin-bottom:3px">섹터별 비중</div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#33415c"></span><span style="flex:1">반도체</span><span style="font-weight:700">43.7%</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#5a719c"></span><span style="flex:1">인터넷</span><span style="font-weight:700">29.8%</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#93a6c6"></span><span style="flex:1">자동차</span><span style="font-weight:700">15.0%</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#cfd8e6"></span><span style="flex:1">금융</span><span style="font-weight:700">11.5%</span></div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:20px 24px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px">종목별 비중</div>
+      <div style="display:flex;flex-direction:column;gap:11px;font-size:12.5px">
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>삼성전자</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:27.6%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">27.6%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>NAVER</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:17.6%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">17.6%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>SK하이닉스</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:16.1%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">16.1%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>현대차</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:15.0%;height:8px;background:#93a6c6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">15.0%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>카카오</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:12.2%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">12.2%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>KB금융</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:11.5%;height:8px;background:#cfd8e6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">11.5%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>테이블 중심 — 행 인라인 확장 계산기 (버튼을 눌러보세요)</div>
+<div class="dv-card" style="width:1440px">
+<div data-screen-label="1c 테이블 중심" style="display:flex;flex-direction:column;gap:20px;padding:0 32px 32px">
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 0">
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span style="font-size:21px;font-weight:800;letter-spacing:-.02em">물타기</span>
+      <span style="font-size:12px;color:#8b95a1;font-weight:500">mool-ta-gi</span>
+    </div>
+    <div style="display:flex;gap:24px;font-size:13px">
+      <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSPI</span><span style="font-weight:700">3,214.56</span><span style="color:#3182f6;font-weight:600">▼0.56%</span></div>
+      <div style="display:flex;gap:7px;align-items:baseline"><span style="color:#8b95a1;font-weight:600">KOSDAQ</span><span style="font-weight:700">912.34</span><span style="color:#f04452;font-weight:600">▲0.45%</span></div>
+    </div>
+  </header>
+  <div style="background:#fff;border-radius:16px;padding:18px 28px;display:flex;align-items:center;gap:36px">
+    <div style="display:flex;flex-direction:column;gap:3px;flex:1"><span style="font-size:12px;color:#8b95a1;font-weight:500">총 평가금액</span><span style="font-size:19px;font-weight:700">₩30,992,000</span></div>
+    <div style="width:1px;height:34px;background:#f2f4f6"></div>
+    <div style="display:flex;flex-direction:column;gap:3px;flex:1"><span style="font-size:12px;color:#8b95a1;font-weight:500">총 매입금액</span><span style="font-size:19px;font-weight:700">₩32,552,000</span></div>
+    <div style="width:1px;height:34px;background:#f2f4f6"></div>
+    <div style="display:flex;flex-direction:column;gap:3px;flex:1"><span style="font-size:12px;color:#8b95a1;font-weight:500">평가손익</span><span style="font-size:19px;font-weight:700;color:#3182f6">−₩1,560,000 <span style="font-size:13px">−4.79%</span></span></div>
+    <div style="width:1px;height:34px;background:#f2f4f6"></div>
+    <div style="display:flex;flex-direction:column;gap:3px;flex:1"><span style="font-size:12px;color:#8b95a1;font-weight:500">오늘 등락</span><span style="font-size:19px;font-weight:700;color:#3182f6">−₩213,400 <span style="font-size:13px">−0.68%</span></span></div>
+  </div>
+  <div style="background:#fff;border-radius:16px;padding:8px 0 12px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 28px 12px"><span style="font-size:16px;font-weight:700">보유 종목</span><span style="font-size:12px;color:#8b95a1">물타기 계산을 누르면 행 아래로 계산기가 펼쳐집니다</span></div>
+    <div style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 118px;gap:8px;padding:8px 28px;font-size:12px;color:#8b95a1;font-weight:600;border-bottom:1px solid #f2f4f6"><span>종목명</span><span style="text-align:right">보유수량</span><span style="text-align:right">평단가</span><span style="text-align:right">현재가</span><span style="text-align:right">평가손익</span><span></span></div>
+    <sc-for list="{{ rowsC }}" as="row" hint-placeholder-count="6">
+      <div>
+        <div onClick="{{ row.select }}" style="display:grid;grid-template-columns:1.5fr .7fr 1fr 1fr 1.2fr 118px;gap:8px;align-items:center;padding:13px 28px;cursor:pointer;background: {{ row.bg }}" style-hover="background:#f7f9fc">
+          <span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">{{ row.name }}</span><span style="font-size:11.5px;color:#8b95a1">{{ row.code }}</span></span>
+          <span style="text-align:right;font-size:14px">{{ row.qtyS }}</span>
+          <span style="text-align:right;font-size:14px;color:#4e5968">{{ row.avgS }}</span>
+          <span style="text-align:right;font-size:14px;font-weight:600">{{ row.curS }}</span>
+          <span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:14px;font-weight:700;color: {{ row.color }}">{{ row.plS }}</span><span style="font-size:11.5px;color: {{ row.color }}">{{ row.plAmtS }}</span></span>
+          <button onClick="{{ row.select }}" style="justify-self:end;border:1px solid {{ row.btnBorder }};background: {{ row.btnBg }};color: {{ row.btnColor }};font-weight:600;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap">{{ row.btnLabel }}</button>
+        </div>
+        <sc-if value="{{ row.expanded }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#f7f9fc;border-top:1px solid #eef1f5;border-bottom:1px solid #eef1f5;padding:22px 28px;display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:32px">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600">현재가에 추가 매수</span><span style="font-size:16px;font-weight:800;color:#3182f6">{{ simC.qtyS }}주</span></div>
+              <input type="range" min="1" max="{{ simC.max }}" value="{{ simC.qty }}" onChange="{{ simC.onQty }}" style="width:100%;margin:0">
+              <div style="position:relative;height:6px;background:#e5eaf0;border-radius:3px;margin:26px 6px 28px">
+                <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#3182f6;border:3px solid #f7f9fc;transform:translateX(-50%);left: {{ simC.gCur }}"></span>
+                <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#b0b8c1;border:3px solid #f7f9fc;transform:translateX(-50%);left: {{ simC.gAvg }}"></span>
+                <span style="position:absolute;top:-5px;width:14px;height:14px;border-radius:50%;background:#191f28;border:3px solid #f7f9fc;transform:translateX(-50%);left: {{ simC.gNew }}"></span>
+                <span style="position:absolute;top:14px;font-size:10.5px;color:#3182f6;font-weight:600;transform:translateX(-50%);white-space:nowrap;left: {{ simC.gCur }}">현재가</span>
+                <span style="position:absolute;top:-26px;font-size:10.5px;color:#8b95a1;font-weight:600;transform:translateX(-50%);white-space:nowrap;left: {{ simC.gAvg }}">기존 평단</span>
+                <span style="position:absolute;top:14px;font-size:10.5px;color:#191f28;font-weight:700;transform:translateX(-50%);white-space:nowrap;left: {{ simC.gNewL }}">새 평단</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:13.5px;justify-content:center">
+              <div style="display:flex;justify-content:space-between"><span style="color:#8b95a1">새 평단가</span><span style="font-weight:700">{{ simC.newAvgS }} <span style="color:#3182f6;font-weight:600;font-size:12px">{{ simC.dropS }}</span></span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#8b95a1">필요 금액</span><span style="font-weight:700">{{ simC.needS }}</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#8b95a1">손익분기</span><span style="font-weight:700;color: {{ simC.beColor }}">{{ simC.beS }}</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
+              <span style="font-size:13px;font-weight:600">목표 평단가 역산</span>
+              <input type="number" placeholder="목표 평단가 (원)" value="{{ simC.target }}" onChange="{{ simC.onTarget }}" style="border:1px solid #d8dee6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;background:#fff" style-focus="border-color:#3182f6">
+              <span style="font-size:12.5px;color:#4e5968;line-height:1.5">{{ simC.tRes }}</span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:16px">
+    <div style="background:#fff;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:24px">
+      <svg width="150" height="150" viewBox="0 0 164 164" style="transform:rotate(-90deg);flex:none">
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#33415c" stroke-width="22" stroke-dasharray="192.2 439.8" stroke-dashoffset="0"></circle>
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#5a719c" stroke-width="22" stroke-dasharray="131.1 439.8" stroke-dashoffset="-192.2"></circle>
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#93a6c6" stroke-width="22" stroke-dasharray="66 439.8" stroke-dashoffset="-323.3"></circle>
+        <circle cx="82" cy="82" r="70" fill="none" stroke="#cfd8e6" stroke-width="22" stroke-dasharray="50.6 439.8" stroke-dashoffset="-389.3"></circle>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;flex:1">
+        <div style="font-size:15px;font-weight:700;margin-bottom:3px">섹터별 비중</div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#33415c"></span><span style="flex:1">반도체</span><span style="font-weight:700">43.7%</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#5a719c"></span><span style="flex:1">인터넷</span><span style="font-weight:700">29.8%</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#93a6c6"></span><span style="flex:1">자동차</span><span style="font-weight:700">15.0%</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:#cfd8e6"></span><span style="flex:1">금융</span><span style="font-weight:700">11.5%</span></div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:20px 24px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px">종목별 비중</div>
+      <div style="display:flex;flex-direction:column;gap:11px;font-size:12.5px">
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>삼성전자</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:27.6%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">27.6%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>NAVER</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:17.6%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">17.6%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>SK하이닉스</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:16.1%;height:8px;background:#33415c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">16.1%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>현대차</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:15.0%;height:8px;background:#93a6c6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">15.0%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>카카오</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:12.2%;height:8px;background:#5a719c;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">12.2%</span></div>
+        <div style="display:grid;grid-template-columns:76px 1fr 44px;gap:10px;align-items:center"><span>KB금융</span><div style="height:8px;background:#eef1f5;border-radius:4px"><div style="width:11.5%;height:8px;background:#cfd8e6;border-radius:4px"></div></div><span style="text-align:right;font-weight:600">11.5%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">다음 시도: "<a class="dv-oid" href="#1a">1a</a>로 확정하고 다듬어줘" · "<a class="dv-oid" href="#1b">1b</a> 다크 계산기를 <a class="dv-oid" href="#1a">1a</a>에 적용" · "모바일 반응형 버전도 보여줘"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;sliderMax&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:200,&quot;min&quot;:50,&quot;max&quot;:1000,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;시뮬레이터&quot;},&quot;includeFees&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;시뮬레이터&quot;}}">
+class Component extends DCLogic {
+  state = { a:{sel:0,qty:20,target:''}, b:{sel:2,qty:30,target:''}, c:{sel:4,qty:20,target:''} };
+  H = [
+    {name:'삼성전자',code:'005930',qty:120,avg:78400,cur:71200},
+    {name:'SK하이닉스',code:'000660',qty:25,avg:168000,cur:199500},
+    {name:'NAVER',code:'035420',qty:30,avg:215000,cur:182300},
+    {name:'현대차',code:'005380',qty:18,avg:242000,cur:258500},
+    {name:'카카오',code:'035720',qty:90,avg:58200,cur:41850},
+    {name:'KB금융',code:'105560',qty:40,avg:72500,cur:89300},
+  ];
+  won(n){ return '₩'+Math.round(n).toLocaleString('ko-KR'); }
+  setK(k,patch){ this.setState(s=>({[k]:Object.assign({},s[k],patch)})); }
+  sim(k){
+    const st=this.state[k], h=this.H[st.sel==null?0:st.sel], q=st.qty;
+    const fees=this.props.includeFees??false;
+    const newAvg=(h.qty*h.avg+q*h.cur)/(h.qty+q);
+    const need=q*h.cur*(fees?1.00015:1);
+    const be=(newAvg-h.cur)/h.cur*100;
+    const gap=(h.cur/h.avg-1)*100;
+    const lo=Math.min(h.cur,h.avg)*0.96, hi=Math.max(h.cur,h.avg)*1.04;
+    const pos=x=>Math.max(0,Math.min(100,(x-lo)/(hi-lo)*100));
+    const P=x=>pos(x).toFixed(1)+'%';
+    const cp=pos(h.cur); let nl=pos(newAvg);
+    if(Math.abs(nl-cp)<14) nl=Math.max(0,Math.min(100,cp+(nl>=cp?14:-14)));
+    const t=parseFloat(st.target);
+    let tRes='"평단을 얼마까지 내리고 싶은지" 입력하면 필요한 매수량을 역산합니다.';
+    if(!isNaN(t)){
+      if(t>=h.avg) tRes='목표가는 현재 평단('+this.won(h.avg)+')보다 낮아야 합니다.';
+      else if(t<=h.cur) tRes='현재가('+this.won(h.cur)+')보다 높은 목표가만 가능합니다.';
+      else { const n=Math.ceil(h.qty*(h.avg-t)/(t-h.cur)); tRes=n.toLocaleString('ko-KR')+'주 추가 매수 시 평단 '+this.won(t)+' 달성 — '+this.won(n*h.cur)+' 필요'; }
+    }
+    const up=be>0;
+    return {
+      name:h.name, code:h.code, curS:this.won(h.cur), avgS:this.won(h.avg),
+      gapS:(gap>0?'+':'')+gap.toFixed(2)+'%',
+      gapColor:gap>0?'#f04452':'#3182f6', gapColorDark:gap>0?'#ff8f96':'#7aa9f8',
+      qty:q, qtyS:q.toLocaleString('ko-KR'), max:this.props.sliderMax??200,
+      newAvgS:this.won(newAvg), dropS:'−'+(100-newAvg/h.avg*100).toFixed(2)+'%',
+      needS:this.won(need),
+      beS: up? '+'+be.toFixed(2)+'% 상승 시 본전' : '이미 수익권 (평단 < 현재가)',
+      beShortS: up? '+'+be.toFixed(2)+'%' : '수익권',
+      beColor: up? '#f04452':'#3182f6',
+      gCur:P(h.cur), gAvg:P(h.avg), gNew:P(newAvg), gNewL:nl.toFixed(1)+'%',
+      target:st.target, tRes,
+      onQty:e=>this.setK(k,{qty:+e.target.value}),
+      onTarget:e=>this.setK(k,{target:e.target.value}),
+    };
+  }
+  rows(k){
+    const toggle=(k==='c');
+    return this.H.map((h,i)=>{
+      const pl=(h.cur/h.avg-1)*100, amt=(h.cur-h.avg)*h.qty;
+      const active=this.state[k].sel===i;
+      return {
+        name:h.name, code:h.code,
+        qtyS:h.qty.toLocaleString('ko-KR')+'주',
+        avgS:this.won(h.avg), curS:this.won(h.cur),
+        plS:(pl>0?'+':'')+pl.toFixed(2)+'%',
+        plAmtS:(amt>0?'+':'−')+this.won(Math.abs(amt)),
+        color:pl>0?'#f04452':'#3182f6',
+        bg:active?'#f2f7ff':'transparent',
+        expanded:toggle&&active,
+        btnLabel:toggle&&active?'닫기':'물타기 계산',
+        btnBg:toggle&&active?'#3182f6':'#fff',
+        btnColor:toggle&&active?'#fff':'#3182f6',
+        btnBorder:toggle&&active?'#3182f6':'#d8dee6',
+        select:()=>this.setK(k,{sel:toggle&&active?null:i, target:''}),
+      };
+    });
+  }
+  renderVals(){
+    return {
+      simA:this.sim('a'), simB:this.sim('b'), simC:this.sim('c'),
+      rowsA:this.rows('a'), rowsB:this.rows('b'), rowsC:this.rows('c'),
+    };
+  }
+}
+</script>
+</body>
+</html>
