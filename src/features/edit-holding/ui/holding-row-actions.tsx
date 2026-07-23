@@ -28,7 +28,8 @@ export function HoldingRowActions({ holding }: { holding: Holding }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`${holding.name} 더보기`}
-          className="border-hairline text-muted-strong flex size-8 items-center justify-center rounded-lg border bg-white transition-colors hover:border-[#8b95a1] hover:text-[#191f28] aria-expanded:bg-[#f2f4f6]"
+          /* 모바일은 터치 타깃을 40px까지 키운다 (데스크톱은 시안대로 32px) */
+          className="border-hairline text-muted-strong flex size-10 items-center justify-center rounded-lg border bg-white transition-colors hover:border-[#8b95a1] hover:text-[#191f28] aria-expanded:bg-[#f2f4f6] md:size-8"
         >
           <MoreVertical className="size-4" />
         </DropdownMenuTrigger>
