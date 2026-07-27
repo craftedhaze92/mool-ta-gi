@@ -1,4 +1,4 @@
-import type { Holding } from './types';
+import type { Holding, PriceMap } from './types';
 
 /**
  * 테스트 전용 고정 픽스처. 프로덕션 코드에서 쓰지 않으며 index.ts로도 내보내지 않는다.
@@ -21,8 +21,6 @@ export const HOLDING_FIXTURES: Holding[] = [
     sector: '반도체',
     quantity: 120,
     avgPrice: 78_400,
-    currentPrice: 71_200,
-    prevClose: 72_300,
   },
   {
     id: 'seed-000660',
@@ -31,8 +29,6 @@ export const HOLDING_FIXTURES: Holding[] = [
     sector: '반도체',
     quantity: 25,
     avgPrice: 168_000,
-    currentPrice: 199_500,
-    prevClose: 198_000,
   },
   {
     id: 'seed-035420',
@@ -41,8 +37,6 @@ export const HOLDING_FIXTURES: Holding[] = [
     sector: '인터넷',
     quantity: 30,
     avgPrice: 215_000,
-    currentPrice: 182_300,
-    prevClose: 185_000,
   },
   {
     id: 'seed-005380',
@@ -51,7 +45,18 @@ export const HOLDING_FIXTURES: Holding[] = [
     sector: '자동차',
     quantity: 18,
     avgPrice: 242_000,
-    currentPrice: 258_500,
-    prevClose: 258_000,
   },
 ];
+
+/**
+ * HOLDING_FIXTURES에 물릴 시세.
+ *
+ * 시세가 Holding에서 떨어져 나오기 전의 currentPrice·prevClose를 그대로 옮겨 왔다.
+ * 덕분에 calc.test.ts의 기대값(−864,000 / +787,500 / 76,960 …)이 하나도 바뀌지 않는다.
+ */
+export const PRICE_FIXTURES: PriceMap = {
+  '005930': { current: 71_200, prevClose: 72_300 },
+  '000660': { current: 199_500, prevClose: 198_000 },
+  '035420': { current: 182_300, prevClose: 185_000 },
+  '005380': { current: 258_500, prevClose: 258_000 },
+};

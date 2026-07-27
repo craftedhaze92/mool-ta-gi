@@ -68,7 +68,8 @@ export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormVal
         )}
       />
 
-      <div className="grid grid-cols-3 gap-3">
+      {/* 현재가 입력은 없다. 시세는 종목코드로 서버에서 가져온다 */}
+      <div className="grid grid-cols-2 gap-3">
         <label className={LABEL}>
           보유수량
           <Input
@@ -84,17 +85,6 @@ export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormVal
           평단가
           <Input
             {...register('avgPrice')}
-            type="number"
-            inputMode="numeric"
-            placeholder="원"
-            className={FIELD}
-          />
-        </label>
-
-        <label className={LABEL}>
-          현재가
-          <Input
-            {...register('currentPrice')}
             type="number"
             inputMode="numeric"
             placeholder="원"

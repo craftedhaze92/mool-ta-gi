@@ -44,7 +44,7 @@ export function HoldingFormDialog({ open, onOpenChange, editing }: HoldingFormDi
         <DialogHeader>
           <DialogTitle className="text-[17px] font-bold">{title}</DialogTitle>
           <DialogDescription className="sr-only">
-            종목명, 종목코드, 섹터, 보유수량, 평단가, 현재가를 입력합니다.
+            종목명, 종목코드, 섹터, 보유수량, 평단가를 입력합니다.
           </DialogDescription>
         </DialogHeader>
 

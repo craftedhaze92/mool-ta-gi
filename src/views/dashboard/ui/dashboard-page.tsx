@@ -1,6 +1,9 @@
 'use client';
 
 import { useHoldingsHydrated } from '@/entities/holding';
+import { useHoldingQuotes } from '@/features/holding-quotes';
+import { useMarketOpen } from '@/shared/lib/use-market-open';
+import { Button } from '@/shared/ui/button';
 import { AveragingPanel, AveragingPanelSkeleton } from '@/widgets/averaging-panel';
 import { HoldingAllocation, HoldingAllocationSkeleton } from '@/widgets/holding-allocation';
 import { HoldingsTable, HoldingsTableSkeleton } from '@/widgets/holdings-table';
@@ -59,16 +62,50 @@ function DashboardSkeleton() {
   );
 }
 
+/**
+ * 시세를 통째로 못 받았을 때.
+ *
+ * 목데이터로 폴백하지 않는다. 잘못된 시세는 없는 시세보다 나쁘다 — 사용자가 그 숫자를
+ * 믿고 실제로 매매할 수 있기 때문이다.
+ */
+function QuoteErrorBanner({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      role="alert"
+      className="border-hairline flex items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3"
+    >
+      <span className="text-[13px] font-medium">시세를 불러오지 못했습니다</span>
+      <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+        다시 시도
+      </Button>
+    </div>
+  );
+}
+
 export function DashboardPage() {
   // 보유 종목은 localStorage에 있다. 복원 전에는 seed 상태라 화면에 그리면 안 된다.
   const hydrated = useHoldingsHydrated();
+  /*
+   * 시세 로딩은 하이드레이션 게이트와 별개의 축이다. 게이트가 열리면 시세가 아직
+   * 안 왔어도 위젯을 그린다 — 종목명·수량·평단가는 이미 알고 있으니 즉시 보여주고,
+   * 시세에 기대는 값만 각 위젯이 스켈레톤으로 가린다.
+   */
+  const { status, fetchedAt, refetch } = useHoldingQuotes();
+  const marketOpen = useMarketOpen();
 
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 pb-8 sm:px-6 xl:gap-5 xl:px-10 xl:pb-10">
-      <MarketHeader />
+      <MarketHeader
+        fetchedAt={fetchedAt}
+        marketOpen={marketOpen}
+        quoteFailed={status === 'error'}
+        onRetry={refetch}
+      />
 
       {hydrated ? (
         <>
+          {status === 'error' && <QuoteErrorBanner onRetry={refetch} />}
+
           <PortfolioSummary />
 
           <div className={BODY_GRID}>

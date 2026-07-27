@@ -6,9 +6,62 @@ import { combine, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { calcWeightedAverage, pickNextSelectedId } from './calc';
 import { MOCK_HOLDINGS } from './mock';
-import type { Holding, HoldingInput } from './types';
+import { SECTORS, type Holding, type HoldingInput, type Sector } from './types';
 
 const DEFAULT_ADD_QUANTITY = 30;
+
+/** persist가 저장하는 부분. partialize와 짝을 이룬다. */
+interface PersistedHoldings {
+  holdings: Holding[];
+}
+
+const CODE_PATTERN = /^\d{6}$/;
+
+/**
+ * 옛 저장값을 현재 형태로 옮긴다.
+ *
+ * v2 이하는 종목마다 currentPrice/prevClose를 들고 있었고 종목코드가 선택 입력이었다.
+ * 시세는 이제 서버에서 오므로 그냥 버리면 되지만, **종목코드가 없는 항목은 버린다.**
+ * 코드가 없으면 시세를 붙일 방법이 없어 평가금액·손익·비중이 영원히 계산되지 않는
+ * 유령 행이 되기 때문이다. 그런 행을 남겨두면 합계가 조용히 어긋난다.
+ *
+ * 수량·평단가는 사용자만 아는 값이라 최대한 지킨다. 형태가 깨진 항목만 걸러낸다.
+ */
+function migrateHoldings(persisted: unknown, version: number): PersistedHoldings {
+  if (version >= 3) return (persisted as PersistedHoldings | undefined) ?? { holdings: [] };
+
+  const raw = (persisted as { holdings?: unknown } | undefined)?.holdings;
+  if (!Array.isArray(raw)) return { holdings: MOCK_HOLDINGS };
+
+  const holdings = raw.flatMap((item) => {
+    const holding = toMigratedHolding(item);
+    return holding === null ? [] : [holding];
+  });
+
+  return { holdings };
+}
+
+function toMigratedHolding(item: unknown): Holding | null {
+  if (typeof item !== 'object' || item === null) return null;
+
+  const record = item as Record<string, unknown>;
+  const { id, code, name, sector, quantity, avgPrice } = record;
+
+  if (typeof code !== 'string' || !CODE_PATTERN.test(code)) return null;
+  if (typeof name !== 'string' || name === '') return null;
+  if (typeof quantity !== 'number' || !Number.isFinite(quantity)) return null;
+  if (typeof avgPrice !== 'number' || !Number.isFinite(avgPrice)) return null;
+
+  return {
+    id: typeof id === 'string' && id !== '' ? id : `migrated-${code}`,
+    code,
+    name,
+    // 섹터 목록이 바뀌었을 수 있다. 모르는 값은 '기타'로 떨어뜨린다.
+    sector: SECTORS.includes(sector as Sector) ? (sector as Sector) : '기타',
+    quantity,
+    avgPrice,
+  };
+}
 
 /**
  * 보유 종목의 단일 소스.
@@ -44,8 +97,7 @@ export const useHoldingsStore = create(
             const id = crypto.randomUUID();
 
             set((state) => {
-              // 신규 추가 시점에는 전일 종가를 알 수 없어 현재가와 같게 둔다.
-              state.holdings.push({ ...input, id, prevClose: input.currentPrice });
+              state.holdings.push({ ...input, id });
               state.selectedId = id;
               state.addQuantity = DEFAULT_ADD_QUANTITY;
               state.targetAvgInput = '';
@@ -54,7 +106,7 @@ export const useHoldingsStore = create(
             return id;
           },
 
-          /** 기존 종목을 덮어쓴다. prevClose는 등락 계산의 기준이므로 보존한다. */
+          /** 기존 종목을 덮어쓴다. */
           updateHolding: (id: string, input: HoldingInput) =>
             set((state) => {
               const target = state.holdings.find((h) => h.id === id);
@@ -65,7 +117,7 @@ export const useHoldingsStore = create(
 
           /**
            * 추가 매수 합산. 수량은 더하고 평단가는 가중평균으로 갱신한다.
-           * 종목명·섹터·현재가는 새로 입력한 값을 따르고, prevClose는 기존값을 유지한다.
+           * 종목명·섹터는 새로 입력한 값을 따른다.
            */
           mergeHolding: (targetId: string, input: HoldingInput) =>
             set((state) => {
@@ -82,7 +134,6 @@ export const useHoldingsStore = create(
               target.name = input.name;
               target.code = input.code;
               target.sector = input.sector;
-              target.currentPrice = input.currentPrice;
             }),
 
           removeHolding: (id: string) =>
@@ -121,25 +172,17 @@ export const useHoldingsStore = create(
     {
       name: 'multagi-holdings',
       /*
-       * seed(mock.ts)를 갱신할 때 함께 올린다.
+       * v3: 시세(currentPrice/prevClose)를 서버 상태로 분리하고 종목코드를 필수로 올렸다.
        *
-       * seed는 '저장된 값이 없을 때만' 쓰이므로, 앱을 한 번이라도 연 브라우저는
-       * 옛 종목을 계속 들고 있어 새 seed를 영영 보지 못한다. version이 달라지면
-       * 저장값을 버리고 seed로 떨어지게 해서 그 상태를 끊는다.
-       *
-       * 아직 목데이터 단계라 이렇게 둔다. 실사용자가 자기 종목을 넣기 시작하면
-       * seed 갱신 때문에 남의 포트폴리오를 지우는 셈이 되므로, 그때는 version을
-       * 올리지 말고 seed를 '예시 데이터'로 따로 격리해야 한다.
+       * v2까지는 저장값을 통째로 버리고 seed로 떨어뜨렸다. 목데이터 단계에서는 그래도
+       * 됐지만, 이번에는 사용자가 직접 넣은 보유 내역을 지키면서 형태만 바꾼다.
+       * 수량과 평단가는 사용자만 아는 값이라 다시 받아낼 방법이 없기 때문이다.
        */
-      version: 2,
+      version: 3,
       skipHydration: true,
       // 선택 상태와 슬라이더 값은 세션 한정이라 저장하지 않는다.
       partialize: (state) => ({ holdings: state.holdings }),
-      /*
-       * 옛 버전 저장값은 옮기지 않고 버린다. migrate를 아예 주지 않아도 zustand가
-       * 저장값을 무시하긴 하지만 콘솔에 error를 찍으므로, 의도한 폐기임을 명시한다.
-       */
-      migrate: () => ({ holdings: MOCK_HOLDINGS }),
+      migrate: migrateHoldings,
     },
   ),
 );

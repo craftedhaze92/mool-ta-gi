@@ -8,8 +8,10 @@ import {
   type AllocationSlice,
   type Sector,
 } from '@/entities/holding';
+import { useHoldingQuotes } from '@/features/holding-quotes';
 import { formatPercent, formatWon } from '@/shared/lib/format-won';
 import { ChartTooltip } from '@/shared/ui/chart-tooltip';
+import { Skeleton } from '@/shared/ui/skeleton';
 
 /**
  * 섹터별 고정 색상. app/globals.css의 --color-sector-* 와 같은 값이다
@@ -54,9 +56,37 @@ function SectorTooltip({ active, payload }: TooltipContentProps) {
   );
 }
 
+/**
+ * 차트 자리만 가리는 로딩 표시.
+ *
+ * 슬라이스의 SectorChartSkeleton을 재사용하지 않는다. 그건 하이드레이션 전에 화면 전체를
+ * 대신하는 용도라 제목까지 스켈레톤인데, 여기서는 '섹터별 비중'이라는 제목을 이미 알고
+ * 있으므로 가짜 막대로 덮을 이유가 없다.
+ */
+function ChartBodySkeleton() {
+  return (
+    <div className="flex flex-col items-center gap-4 @min-[300px]:flex-row @min-[300px]:gap-[22px]">
+      <div className="relative size-[140px] shrink-0 @min-[300px]:size-[164px]">
+        <Skeleton className="size-full rounded-full" />
+        <div className="bg-card absolute inset-[27%] rounded-full" />
+      </div>
+      <ul className="grid w-full min-w-0 grid-cols-2 gap-x-4 gap-y-2 @min-[300px]:flex @min-[300px]:flex-1 @min-[300px]:flex-col @min-[300px]:gap-2.5">
+        {Array.from({ length: 3 }, (_, i) => (
+          <li key={i} className="flex items-center gap-2">
+            <Skeleton className="size-2.5 rounded-[3px]" />
+            <Skeleton className="h-3.5 flex-1" />
+            <Skeleton className="h-3.5 w-10" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function SectorChart() {
   const holdings = useHoldingsStore((state) => state.holdings);
-  const slices = calcSectorAllocation(holdings);
+  const { prices, status } = useHoldingQuotes();
+  const slices = calcSectorAllocation(holdings, prices);
 
   /*
    * 조각 색은 데이터에 fill로 실어 보낸다. recharts는 데이터 객체를 sector props로
@@ -69,9 +99,16 @@ export function SectorChart() {
     <section className="bg-card @container rounded-2xl px-4 py-4 md:px-6 md:py-5">
       <h2 className="mb-3.5 text-[15px] font-bold">섹터별 비중</h2>
 
-      {slices.length === 0 ? (
+      {holdings.length === 0 ? (
         <p className="text-muted-foreground py-10 text-center text-[13px]">
           종목을 추가하면 비중이 표시됩니다
+        </p>
+      ) : status === 'pending' ? (
+        <ChartBodySkeleton />
+      ) : slices.length === 0 ? (
+        // 보유 종목은 있는데 비중을 못 그린다 = 시세를 하나도 못 받았다.
+        <p className="text-muted-foreground py-10 text-center text-[13px]">
+          시세를 불러오지 못했습니다
         </p>
       ) : (
         /*

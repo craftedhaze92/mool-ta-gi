@@ -1,19 +1,41 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { calcHoldingMetrics, useHoldingsStore, type Holding } from '@/entities/holding';
+import {
+  calcHoldingMetrics,
+  useHoldingsStore,
+  type Holding,
+  type PriceSnapshot,
+} from '@/entities/holding';
 import { AddHoldingButton } from '@/features/add-holding';
+import { useHoldingQuotes, type QuoteStatus } from '@/features/holding-quotes';
 import { HoldingRowActions } from '@/features/edit-holding';
 import { AVERAGING_PANEL_ID, scrollToAnchor } from '@/shared/config/anchors';
 import { formatPercent, formatQuantity, formatSignedWon, formatWon } from '@/shared/lib/format-won';
 import { cn } from '@/shared/lib/utils';
+import { Skeleton } from '@/shared/ui/skeleton';
 
 import { CELL_RESET, GRID, ROW_PADDING } from '../lib/grid';
 
-function HoldingRow({ holding, selected }: { holding: Holding; selected: boolean }) {
+/**
+ * 시세는 부모가 내려준다. 행마다 useHoldingQuotes를 부르면 시세가 갱신될 때마다 모든 행이
+ * 각자 구독을 통해 리렌더된다. 부모가 한 번 구독하고 값만 내려주는 편이 싸다.
+ */
+function HoldingRow({
+  holding,
+  price,
+  status,
+  selected,
+}: {
+  holding: Holding;
+  price: PriceSnapshot | undefined;
+  status: QuoteStatus;
+  selected: boolean;
+}) {
   const selectHolding = useHoldingsStore((state) => state.selectHolding);
-  const metrics = calcHoldingMetrics(holding);
-  const tone = metrics.profit >= 0 ? 'text-up' : 'text-down';
+  const metrics = calcHoldingMetrics(holding, price);
+  const pending = status === 'pending';
+  const tone = metrics === null ? undefined : metrics.profit >= 0 ? 'text-up' : 'text-down';
 
   return (
     <motion.div
@@ -55,15 +77,43 @@ function HoldingRow({ holding, selected }: { holding: Holding; selected: boolean
         {formatWon(holding.avgPrice)}
       </span>
 
-      <span className={cn('col-start-2 row-start-1 text-right text-sm font-semibold', CELL_RESET)}>
-        {formatWon(holding.currentPrice)}
+      {/*
+       * 여기부터가 시세에 기대는 칸이다. 위의 종목명·수량·평단가는 localStorage에서 오므로
+       * 시세를 기다리는 동안에도 그대로 보인다.
+       */}
+      <span
+        className={cn(
+          'col-start-2 row-start-1 flex justify-end text-right text-sm font-semibold',
+          CELL_RESET,
+        )}
+      >
+        {price !== undefined ? (
+          formatWon(price.current)
+        ) : pending ? (
+          <Skeleton className="h-5 w-20" />
+        ) : (
+          <span className="text-muted-foreground text-xs font-normal">시세 없음</span>
+        )}
       </span>
 
       <span className={cn('col-start-2 row-start-2 flex flex-col items-end', CELL_RESET)}>
-        <span className={cn('text-sm font-bold', tone)}>
-          {formatPercent(metrics.profitRate, { signed: true })}
-        </span>
-        <span className={cn('text-[11.5px]', tone)}>{formatSignedWon(metrics.profit)}</span>
+        {metrics === null ? (
+          pending ? (
+            <>
+              <Skeleton className="h-5 w-14" />
+              <Skeleton className="mt-1 h-3 w-20" />
+            </>
+          ) : (
+            <span className="text-muted-foreground text-sm">—</span>
+          )
+        ) : (
+          <>
+            <span className={cn('text-sm font-bold', tone)}>
+              {formatPercent(metrics.profitRate, { signed: true })}
+            </span>
+            <span className={cn('text-[11.5px]', tone)}>{formatSignedWon(metrics.profit)}</span>
+          </>
+        )}
       </span>
 
       <span
@@ -111,6 +161,7 @@ function EmptyState() {
 export function HoldingsTable() {
   const holdings = useHoldingsStore((state) => state.holdings);
   const selectedId = useHoldingsStore((state) => state.selectedId);
+  const { prices, status } = useHoldingQuotes();
   const isEmpty = holdings.length === 0;
 
   return (
@@ -150,7 +201,13 @@ export function HoldingsTable() {
 
           <div role="rowgroup">
             {holdings.map((holding) => (
-              <HoldingRow key={holding.id} holding={holding} selected={holding.id === selectedId} />
+              <HoldingRow
+                key={holding.id}
+                holding={holding}
+                price={prices[holding.code]}
+                status={status}
+                selected={holding.id === selectedId}
+              />
             ))}
           </div>
         </>

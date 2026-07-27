@@ -16,7 +16,7 @@ import { useHoldingsStore } from './holdings-store';
 import type { Holding, HoldingInput } from './types';
 
 /** 필드 순서대로 첫 에러 하나만 보여주므로 우선순위를 고정해 둔다. */
-const FIELD_ORDER = ['name', 'code', 'sector', 'quantity', 'avgPrice', 'currentPrice'] as const;
+const FIELD_ORDER = ['name', 'code', 'sector', 'quantity', 'avgPrice'] as const;
 
 /** 같은 종목코드를 발견해 합산 확인 단계로 넘어갔을 때의 미리보기 값 */
 export interface MergePreview {

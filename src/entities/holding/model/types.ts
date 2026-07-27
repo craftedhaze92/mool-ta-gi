@@ -3,17 +3,22 @@ export const SECTORS = ['반도체', '인터넷', '자동차', '금융', '바이
 
 export type Sector = (typeof SECTORS)[number];
 
-/** 종목코드 미입력을 나타내는 자리 표시자. 이 값끼리는 중복 판정하지 않는다. */
-export const NO_CODE = '—';
-
-/** 보유 종목 한 건. 모든 금액 단위는 원(KRW). */
+/**
+ * 보유 종목 한 건. 모든 금액 단위는 원(KRW).
+ *
+ * 시세(현재가·전일종가)는 여기 없다. 그건 서버에서 오는 값이라 React-Query가 들고 있고,
+ * 이 타입은 사용자가 직접 입력해 localStorage에 남기는 것만 담는다. 두 상태는 수명이
+ * 다르다 — 보유 내역은 내가 팔기 전까지 그대로고, 시세는 몇 초 만에 낡는다.
+ */
 export interface Holding {
   /**
-   * 안정 식별자. 종목코드는 미입력('—')일 수 있어 식별자로 쓸 수 없으므로
-   * 별도로 둔다. 선택 상태·수정·삭제가 모두 이 값을 기준으로 동작한다.
+   * 안정 식별자.
+   *
+   * 종목코드가 필수가 된 뒤에도 id를 따로 두는 이유는 코드가 바뀔 수 있기 때문이다
+   * (수정 폼에서 오타를 고치는 경우). 선택 상태·수정·삭제는 이 값을 기준으로 동작한다.
    */
   id: string;
-  /** 6자리 종목 코드. 예: '005930'. 미입력이면 NO_CODE */
+  /** 6자리 종목 코드. 예: '005930'. 시세 조회 키라서 필수다 */
   code: string;
   name: string;
   /** 섹터명. 섹터 비중 집계 기준이다. */
@@ -21,23 +26,10 @@ export interface Holding {
   quantity: number;
   /** 평균 매입 단가 */
   avgPrice: number;
-  /**
-   * 현재가.
-   *
-   * 다음 단계에서 React-Query 서버 상태(시세 API)로 분리할 필드다.
-   * 그때까지는 사용자가 폼에 직접 입력한 값을 들고 있는다.
-   */
-  currentPrice: number;
-  /** 전일 종가. '오늘 등락' 계산에 쓴다. */
-  prevClose: number;
 }
 
-/**
- * 폼에서 넘어오는 입력값.
- * id는 스토어가 발급하고, prevClose는 스토어가 채운다
- * (신규는 currentPrice와 동일, 수정은 기존값 유지).
- */
-export type HoldingInput = Omit<Holding, 'id' | 'prevClose'>;
+/** 폼에서 넘어오는 입력값. id는 스토어가 발급한다. */
+export type HoldingInput = Omit<Holding, 'id'>;
 
 /**
  * 시세 한 종목분.
@@ -75,13 +67,30 @@ export interface HoldingMetrics {
   dayChangeRate: number;
 }
 
+/**
+ * 포트폴리오 합계.
+ *
+ * 시세를 일부만 받았을 때를 위해 '전 종목 기준'과 '시세를 받은 종목 기준'을 나눠 담는다.
+ * 손익을 totalCost가 아니라 pricedCost로 나누는 것이 핵심이다. 그러지 않으면 시세를 못
+ * 받은 종목의 매입금액이 평가금액에는 없는 채 분모에만 남아, 멀쩡한 포트폴리오가 큰 손실로
+ * 둔갑한다.
+ */
 export interface PortfolioSummary {
+  /** 전 종목 매입금액. 시세와 무관하므로 항상 실값이다 */
   totalCost: number;
+  /** 시세를 받은 종목만의 매입금액. 손익 계산의 기준액이다 */
+  pricedCost: number;
+  /** 시세를 받은 종목만의 평가금액 */
   totalValue: number;
+  /** totalValue − pricedCost */
   totalProfit: number;
   totalProfitRate: number;
   totalDayChange: number;
   totalDayChangeRate: number;
+  /** 시세가 반영된 종목 수. 0이면 평가 관련 값을 화면에 그리면 안 된다 */
+  pricedCount: number;
+  /** 시세를 못 받은 종목코드 */
+  missingCodes: string[];
 }
 
 /** 비중 집계 한 항목. 섹터별·종목별 모두 이 형태를 쓴다. */

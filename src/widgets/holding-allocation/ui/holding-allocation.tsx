@@ -2,8 +2,10 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import { calcHoldingAllocation, useHoldingsStore } from '@/entities/holding';
+import { useHoldingQuotes } from '@/features/holding-quotes';
 import { formatPercent, formatWon } from '@/shared/lib/format-won';
 import { ChartTooltip } from '@/shared/ui/chart-tooltip';
+import { Skeleton } from '@/shared/ui/skeleton';
 
 /**
  * 순차(ordinal) 램프. app/globals.css의 --color-ramp-* 와 같은 값이다.
@@ -31,26 +33,70 @@ function rampColor(index: number, total: number): string {
   return BAR_RAMP[darkest - Math.round(position)];
 }
 
+/** 제목은 이미 아는 값이라 그대로 두고 막대 자리만 가린다. */
+function BarsSkeleton() {
+  return (
+    <ul className="flex flex-col gap-[11px]">
+      {Array.from({ length: 4 }, (_, i) => (
+        <li
+          key={i}
+          className="grid grid-cols-[64px_1fr_40px] items-center gap-2 sm:grid-cols-[76px_1fr_44px] sm:gap-2.5"
+        >
+          <Skeleton className="h-3.5" />
+          <Skeleton className="h-2 rounded" />
+          <Skeleton className="h-3.5" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
+      <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
+      {children}
+    </section>
+  );
+}
+
 export function HoldingAllocation() {
   const holdings = useHoldingsStore((state) => state.holdings);
-  const slices = calcHoldingAllocation(holdings);
+  const { prices, status } = useHoldingQuotes();
+  const slices = calcHoldingAllocation(holdings, prices);
   const prefersReducedMotion = useReducedMotion();
 
-  if (slices.length === 0) {
+  if (holdings.length === 0) {
     return (
-      <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
-        <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
+      <Shell>
         <p className="text-muted-foreground py-10 text-center text-[13px]">
           종목을 추가하면 비중이 표시됩니다
         </p>
-      </section>
+      </Shell>
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <Shell>
+        <BarsSkeleton />
+      </Shell>
+    );
+  }
+
+  if (slices.length === 0) {
+    // 보유 종목은 있는데 비중을 못 그린다 = 시세를 하나도 못 받았다.
+    return (
+      <Shell>
+        <p className="text-muted-foreground py-10 text-center text-[13px]">
+          시세를 불러오지 못했습니다
+        </p>
+      </Shell>
     );
   }
 
   return (
-    <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
-      <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
-
+    <Shell>
       <ul className="flex flex-col gap-[11px] text-[12.5px] tabular-nums">
         {slices.map((slice, index) => (
           <li
@@ -94,6 +140,6 @@ export function HoldingAllocation() {
           </li>
         ))}
       </ul>
-    </section>
+    </Shell>
   );
 }

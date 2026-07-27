@@ -1,6 +1,9 @@
+import { RefreshCw } from 'lucide-react';
 import { MOCK_MARKET_INDICES, type MarketIndex } from '@/entities/market-index';
+import { formatKstTime } from '@/shared/lib/dayjs';
 import { formatPercent } from '@/shared/lib/format-won';
 import { cn } from '@/shared/lib/utils';
+import { Badge } from '@/shared/ui/badge';
 
 function IndexQuote({ quote }: { quote: MarketIndex }) {
   const direction = Math.sign(quote.change); // 1 | 0 | -1
@@ -25,7 +28,32 @@ function IndexQuote({ quote }: { quote: MarketIndex }) {
   );
 }
 
-export function MarketHeader() {
+export interface MarketHeaderProps {
+  /** 마지막으로 시세를 확정한 시각 (ISO 8601). 아직 받은 적 없으면 undefined */
+  fetchedAt?: string;
+  /**
+   * 장 운영 여부. 아직 모르면 null.
+   *
+   * null일 때 아무것도 그리지 않는 게 중요하다. 이 페이지는 빌드 타임에 프리렌더되므로
+   * 서버가 판정한 '지금'은 빌드 시각이다. 판정을 마운트 이후로 미뤄야 SSR 결과와 어긋나지 않는다.
+   */
+  marketOpen?: boolean | null;
+  quoteFailed?: boolean;
+  onRetry?: () => void;
+}
+
+/**
+ * 시세 상태는 props로 받는다.
+ *
+ * 이 위젯을 프레젠테이셔널로 두고 시세 배선은 views/dashboard 한 곳에 모으기 위해서다.
+ * KOSPI/KOSDAQ 지수는 아직 목데이터다 — 지수는 별도 엔드포인트라 이번 범위 밖이다.
+ */
+export function MarketHeader({
+  fetchedAt,
+  marketOpen = null,
+  quoteFailed = false,
+  onRetry,
+}: MarketHeaderProps = {}) {
   return (
     <header className="flex flex-col items-start gap-2 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-y-3 sm:pt-6">
       <div className="flex items-baseline gap-2.5">
@@ -45,10 +73,37 @@ export function MarketHeader() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums sm:gap-x-6 sm:text-[13px]">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs tabular-nums sm:gap-x-6 sm:text-[13px]">
         {MOCK_MARKET_INDICES.map((quote) => (
           <IndexQuote key={quote.name} quote={quote} />
         ))}
+
+        <div className="flex items-center gap-2">
+          {/* 장 상태를 모르는 첫 렌더에서는 배지를 아예 그리지 않는다 */}
+          {marketOpen === false && (
+            <Badge variant="outline" className="text-muted-foreground font-semibold">
+              장 마감
+            </Badge>
+          )}
+
+          {quoteFailed ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              aria-label="시세 다시 불러오기"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-brand rounded-md p-1 outline-none focus-visible:ring-2"
+            >
+              <RefreshCw className="size-3.5" />
+            </button>
+          ) : (
+            /* 첫 조회 전에는 자리만 비운다. 가짜 시각을 보여줄 바에야 없는 편이 낫다 */
+            fetchedAt !== undefined && (
+              <span className="text-muted-foreground font-medium">
+                마지막 갱신 {formatKstTime(fetchedAt)}
+              </span>
+            )
+          )}
+        </div>
       </div>
     </header>
   );

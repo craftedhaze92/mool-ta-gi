@@ -10,10 +10,11 @@ export type {
   Sector,
 } from './model/types';
 
-export { NO_CODE, SECTORS } from './model/types';
+export { SECTORS } from './model/types';
 
 export {
   calcAveraging,
+  calcCostBasis,
   calcHoldingAllocation,
   calcHoldingMetrics,
   calcPortfolioSummary,

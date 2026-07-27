@@ -1,15 +1,18 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useHoldingsStore, type Holding } from '@/entities/holding';
+import { quotesErrorHandler, quotesHandler, quotesPendingHandler } from '@/shared/api/mocks/quotes';
+import { server } from '@/shared/testing/msw-server';
+import { QueryTestProvider, renderWithQuery } from '@/shared/testing/render-with-query';
 import { DashboardPage } from '../index';
 
 /**
  * 화면 검증용 고정 데이터.
  *
  * 프로덕션 seed(entities/holding의 mock)를 쓰지 않는다. seed는 데모에 보일 값이라
- * 시세가 바뀔 때마다 갱신되는데, 그때마다 여기 박힌 금액 단언이 함께 깨지기 때문이다.
+ * 갱신될 때마다 여기 박힌 금액 단언이 함께 깨지기 때문이다.
  * entities 내부 파일은 FSD 규칙상 views에서 import할 수 없어 지역 상수로 둔다.
  */
 const FIXTURES: Holding[] = [
@@ -20,8 +23,6 @@ const FIXTURES: Holding[] = [
     sector: '반도체',
     quantity: 120,
     avgPrice: 78_400,
-    currentPrice: 71_200,
-    prevClose: 72_300,
   },
   {
     id: 'seed-000660',
@@ -30,8 +31,6 @@ const FIXTURES: Holding[] = [
     sector: '반도체',
     quantity: 25,
     avgPrice: 168_000,
-    currentPrice: 199_500,
-    prevClose: 198_000,
   },
   {
     id: 'seed-035420',
@@ -40,8 +39,6 @@ const FIXTURES: Holding[] = [
     sector: '인터넷',
     quantity: 30,
     avgPrice: 215_000,
-    currentPrice: 182_300,
-    prevClose: 185_000,
   },
   {
     id: 'seed-005380',
@@ -50,10 +47,19 @@ const FIXTURES: Holding[] = [
     sector: '자동차',
     quantity: 18,
     avgPrice: 242_000,
-    currentPrice: 258_500,
-    prevClose: 258_000,
   },
 ];
+
+/**
+ * 시세 픽스처. Holding에서 떨어져 나오기 전의 현재가·전일종가를 그대로 옮겼다.
+ * 덕분에 아래 금액 단언(₩23,653,500 등)이 예전 값 그대로 살아 있다.
+ */
+const PRICES = {
+  '005930': { current: 71_200, prevClose: 72_300 },
+  '000660': { current: 199_500, prevClose: 198_000 },
+  '035420': { current: 182_300, prevClose: 185_000 },
+  '005380': { current: 258_500, prevClose: 258_000 },
+};
 
 /**
  * 스토어는 싱글턴이고 persist가 localStorage를 물고 있어서
@@ -61,6 +67,7 @@ const FIXTURES: Holding[] = [
  */
 beforeEach(() => {
   localStorage.clear();
+  server.use(quotesHandler(PRICES));
   useHoldingsStore.setState({
     holdings: FIXTURES.map((h) => ({ ...h })),
     selectedId: FIXTURES[0].id,
@@ -69,10 +76,21 @@ beforeEach(() => {
   });
 });
 
-/** 하이드레이션 게이트가 열린 뒤의 화면을 얻는다. */
+/**
+ * 하이드레이션 게이트가 열린 뒤의 화면을 얻는다.
+ *
+ * '보유 종목'은 시세와 무관하게 나타난다. 시세를 기다리는 값까지 확인하려면
+ * renderDashboardWithQuotes를 쓴다.
+ */
 async function renderDashboard() {
-  render(<DashboardPage />);
+  renderWithQuery(<DashboardPage />);
   await screen.findByText('보유 종목');
+}
+
+/** 시세가 도착해 평가금액이 그려질 때까지 기다린다. */
+async function renderDashboardWithQuotes() {
+  await renderDashboard();
+  await screen.findByText('₩23,653,500');
 }
 
 function rowOf(name: string) {
@@ -91,7 +109,12 @@ describe('DashboardPage', () => {
    * 클라이언트 렌더가 아니라 서버 렌더 결과를 직접 확인한다.
    */
   it('서버 렌더 결과는 로딩 스켈레톤이다', () => {
-    const html = renderToStaticMarkup(<DashboardPage />);
+    // DashboardPage가 시세를 구독하므로 QueryClient가 필요하다.
+    const html = renderToStaticMarkup(
+      <QueryTestProvider>
+        <DashboardPage />
+      </QueryTestProvider>,
+    );
 
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain('불러오는 중');
@@ -109,8 +132,8 @@ describe('DashboardPage', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('요약 카드에 스토어 파생 수치를 표시한다', async () => {
-    await renderDashboard();
+  it('요약 카드에 보유 종목과 시세를 조합한 수치를 표시한다', async () => {
+    await renderDashboardWithQuotes();
 
     expect(screen.getByText('₩23,653,500')).toBeInTheDocument(); // 총 평가금액
     expect(screen.getByText('₩24,414,000')).toBeInTheDocument(); // 총 매입금액
@@ -126,7 +149,8 @@ describe('DashboardPage', () => {
 
   it('행을 클릭하면 시뮬레이터가 해당 종목으로 바뀐다', async () => {
     const user = userEvent.setup();
-    await renderDashboard();
+    // 시뮬레이터는 현재가에서 출발하므로 시세가 와야 본 화면이 그려진다.
+    await renderDashboardWithQuotes();
 
     const panel = screen.getByRole('complementary');
     expect(within(panel).getByText('삼성전자')).toBeInTheDocument();
@@ -145,9 +169,7 @@ describe('DashboardPage', () => {
     await user.type(screen.getByPlaceholderText('예: 삼성전자'), '카카오');
     await user.type(screen.getByPlaceholderText('예: 005930'), '035720');
     await user.type(screen.getByPlaceholderText('주'), '90');
-    const [avgInput, curInput] = screen.getAllByPlaceholderText('원');
-    await user.type(avgInput, '58200');
-    await user.type(curInput, '41850');
+    await user.type(screen.getByPlaceholderText('원'), '58200');
 
     await user.click(screen.getByRole('button', { name: '저장' }));
 
@@ -176,9 +198,7 @@ describe('DashboardPage', () => {
     await user.type(screen.getByPlaceholderText('예: 삼성전자'), '삼성전자');
     await user.type(screen.getByPlaceholderText('예: 005930'), '005930');
     await user.type(screen.getByPlaceholderText('주'), '30');
-    const [avgInput, curInput] = screen.getAllByPlaceholderText('원');
-    await user.type(avgInput, '71200');
-    await user.type(curInput, '71200');
+    await user.type(screen.getByPlaceholderText('원'), '71200');
 
     await user.click(screen.getByRole('button', { name: '저장' }));
 
@@ -205,6 +225,52 @@ describe('DashboardPage', () => {
       'SK하이닉스',
       '현대차',
     ]);
+  });
+
+  /*
+   * 요구의 핵심: 보유 정보(종목명·수량·평단가)는 localStorage에 있으니 시세를 기다리는
+   * 동안에도 즉시 보여야 한다. 시세에 기대는 칸만 가린다.
+   */
+  it('시세를 기다리는 동안에도 보유 정보는 바로 보여준다', async () => {
+    server.use(quotesPendingHandler());
+    await renderDashboard();
+
+    expect(screen.getAllByText('삼성전자').length).toBeGreaterThan(0);
+    expect(within(rowOf('삼성전자')).getByText('120주')).toBeInTheDocument();
+    // 매입금액은 시세가 없어도 계산된다
+    expect(screen.getByText('₩24,414,000')).toBeInTheDocument();
+    // 평가금액은 아직 없다 — 0원으로 지어내면 안 된다
+    expect(screen.queryByText('₩23,653,500')).not.toBeInTheDocument();
+  });
+
+  /*
+   * 목데이터로 폴백하지 않는다. 잘못된 시세는 없는 시세보다 나쁘다 —
+   * 사용자가 그 숫자를 믿고 실제로 매매할 수 있기 때문이다.
+   */
+  it('시세를 통째로 못 받으면 실패를 알리고 재시도를 제공한다', async () => {
+    server.use(quotesErrorHandler());
+    await renderDashboard();
+
+    const alert = await screen.findByRole('alert', {}, { timeout: 5000 });
+    expect(alert).toHaveTextContent('시세를 불러오지 못했습니다');
+    expect(within(alert).getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
+
+    // 보유 정보는 그대로 남아 있다
+    expect(screen.getAllByText('삼성전자').length).toBeGreaterThan(0);
+    expect(screen.getByText('₩24,414,000')).toBeInTheDocument();
+  });
+
+  it('일부 종목만 시세를 못 받으면 그 행만 시세 없음으로 표시한다', async () => {
+    server.use(quotesHandler(PRICES, { failed: ['035420'] }));
+    await renderDashboard();
+
+    const naverRow = await screen.findByText('NAVER');
+    expect(within(naverRow.closest('[role="row"]')!).getByText('시세 없음')).toBeInTheDocument();
+
+    // 나머지 종목은 정상적으로 그려진다
+    expect(within(rowOf('삼성전자')).getByText('₩71,200')).toBeInTheDocument();
+    // 제외된 종목이 있다는 사실을 숨기지 않는다
+    expect(await screen.findByText(/1개 종목은 평가금액에서 제외/)).toBeInTheDocument();
   });
 
   it('종목이 하나도 없으면 빈 상태를 보여준다', async () => {

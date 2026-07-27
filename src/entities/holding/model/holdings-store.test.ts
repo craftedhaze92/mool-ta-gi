@@ -3,7 +3,7 @@ import { useHoldingsStore } from './holdings-store';
 import { HOLDING_FIXTURES } from './holdings.fixture';
 // 마이그레이션 테스트는 'seed로 떨어지는가'를 확인하므로 seed 자체를 참조해야 한다.
 import { MOCK_HOLDINGS } from './mock';
-import { NO_CODE, type HoldingInput } from './types';
+import type { HoldingInput } from './types';
 
 const KAKAO: HoldingInput = {
   name: '카카오',
@@ -11,7 +11,6 @@ const KAKAO: HoldingInput = {
   sector: '인터넷',
   quantity: 90,
   avgPrice: 58_200,
-  currentPrice: 41_850,
 };
 
 /** 스토어는 모듈 스코프 싱글턴이라 테스트마다 seed 상태로 되돌린다. */
@@ -37,11 +36,6 @@ describe('addHolding', () => {
     expect(state().selectedId).toBe(id);
   });
 
-  it('전일 종가를 알 수 없으므로 현재가와 같게 둔다', () => {
-    state().addHolding(KAKAO);
-    expect(state().holdings[4].prevClose).toBe(KAKAO.currentPrice);
-  });
-
   it('선택을 바꾸면서 시뮬레이터 입력을 초기화한다', () => {
     state().setAddQuantity(150);
     state().setTargetAvgInput('70000');
@@ -54,7 +48,7 @@ describe('addHolding', () => {
 });
 
 describe('updateHolding', () => {
-  it('입력값으로 덮어쓰되 전일 종가는 보존한다', () => {
+  it('입력값으로 덮어쓴다', () => {
     const target = HOLDING_FIXTURES[0];
 
     state().updateHolding(target.id, {
@@ -63,14 +57,12 @@ describe('updateHolding', () => {
       sector: '반도체',
       quantity: 200,
       avgPrice: 75_000,
-      currentPrice: 70_000,
     });
 
     expect(state().holdings[0]).toMatchObject({
+      id: target.id,
       quantity: 200,
       avgPrice: 75_000,
-      currentPrice: 70_000,
-      prevClose: target.prevClose,
     });
   });
 
@@ -93,13 +85,6 @@ describe('mergeHolding', () => {
       quantity: 150,
       avgPrice: 76_960, // (120×78,400 + 30×71,200) / 150
     });
-  });
-
-  it('전일 종가는 기존값을 유지한다', () => {
-    const samsung = HOLDING_FIXTURES[0];
-    state().mergeHolding(samsung.id, { ...KAKAO, quantity: 10, avgPrice: 70_000 });
-
-    expect(state().holdings[0].prevClose).toBe(samsung.prevClose);
   });
 });
 
@@ -129,7 +114,7 @@ describe('removeHolding', () => {
 
 describe('persist', () => {
   it('종목만 저장하고 선택 상태는 저장하지 않는다', () => {
-    state().addHolding({ ...KAKAO, code: '' });
+    state().addHolding(KAKAO);
 
     const saved = JSON.parse(localStorage.getItem('multagi-holdings') ?? '{}');
 
@@ -138,17 +123,24 @@ describe('persist', () => {
   });
 
   /** 저장된 payload를 직접 심어 rehydrate가 어떻게 처리하는지 본다. */
-  const seedStorage = (version: number) =>
-    localStorage.setItem(
-      'multagi-holdings',
-      JSON.stringify({
-        version,
-        state: { holdings: [{ ...HOLDING_FIXTURES[0], name: '옛날데이터', quantity: 999 }] },
-      }),
-    );
+  const seedStorage = (version: number, holdings: unknown[]) =>
+    localStorage.setItem('multagi-holdings', JSON.stringify({ version, state: { holdings } }));
+
+  /** v2까지 저장되던 형태. 시세를 품고 있고 종목코드가 선택 입력이었다. */
+  const legacy = (over: Record<string, unknown> = {}) => ({
+    id: 'legacy-1',
+    code: '005930',
+    name: '삼성전자',
+    sector: '반도체',
+    quantity: 120,
+    avgPrice: 78_400,
+    currentPrice: 71_200,
+    prevClose: 72_300,
+    ...over,
+  });
 
   it('현재 version 저장값은 그대로 복원한다', async () => {
-    seedStorage(2);
+    seedStorage(3, [{ ...HOLDING_FIXTURES[0], name: '옛날데이터', quantity: 999 }]);
 
     await useHoldingsStore.persist.rehydrate();
 
@@ -156,23 +148,68 @@ describe('persist', () => {
     expect(state().holdings[0]).toMatchObject({ name: '옛날데이터', quantity: 999 });
   });
 
-  /*
-   * seed를 갱신해도 기존 사용자가 옛 종목을 계속 보는 문제를 version으로 끊는다.
-   * 값이 아니라 'seed와 같아지는가'로 단언해야 seed를 또 고쳐도 이 테스트가 살아남는다.
-   */
-  it('옛 version 저장값은 버리고 seed로 떨어진다', async () => {
-    seedStorage(1);
+  describe('v2 → v3 마이그레이션', () => {
+    it('보유 내역은 지키고 시세 필드만 떼어낸다', async () => {
+      // 수량·평단가는 사용자만 아는 값이라 다시 받아낼 방법이 없다. 반드시 살아남아야 한다.
+      seedStorage(2, [legacy({ quantity: 999, avgPrice: 12_345 })]);
 
-    await useHoldingsStore.persist.rehydrate();
+      await useHoldingsStore.persist.rehydrate();
 
-    expect(state().holdings).toEqual(MOCK_HOLDINGS);
-    expect(state().holdings.map((h) => h.name)).not.toContain('옛날데이터');
-  });
-});
+      expect(state().holdings).toHaveLength(1);
+      expect(state().holdings[0]).toEqual({
+        id: 'legacy-1',
+        code: '005930',
+        name: '삼성전자',
+        sector: '반도체',
+        quantity: 999,
+        avgPrice: 12_345,
+      });
+      expect(state().holdings[0]).not.toHaveProperty('currentPrice');
+      expect(state().holdings[0]).not.toHaveProperty('prevClose');
+    });
 
-describe('NO_CODE', () => {
-  it('종목코드 자리 표시자는 저장 값과 구분된다', () => {
-    state().addHolding({ ...KAKAO, code: NO_CODE });
-    expect(state().holdings[4].code).toBe(NO_CODE);
+    /*
+     * 종목코드가 없으면 시세를 붙일 수 없다. 남겨두면 평가금액도 비중도 영원히 계산되지
+     * 않는 유령 행이 되어 합계를 조용히 어긋나게 만든다.
+     */
+    it('종목코드가 없던 항목은 버린다', async () => {
+      seedStorage(2, [legacy(), legacy({ id: 'legacy-2', code: '—', name: '코드없음' })]);
+
+      await useHoldingsStore.persist.rehydrate();
+
+      expect(state().holdings.map((h) => h.name)).toEqual(['삼성전자']);
+    });
+
+    it('6자리가 아닌 종목코드도 버린다', async () => {
+      seedStorage(2, [legacy({ code: '12345' }), legacy({ id: 'x', code: '' })]);
+
+      await useHoldingsStore.persist.rehydrate();
+
+      expect(state().holdings).toEqual([]);
+    });
+
+    it('형태가 깨진 항목은 건너뛰고 나머지를 살린다', async () => {
+      seedStorage(2, [null, 'garbage', legacy({ quantity: 'abc' }), legacy({ id: 'ok' })]);
+
+      await useHoldingsStore.persist.rehydrate();
+
+      expect(state().holdings.map((h) => h.id)).toEqual(['ok']);
+    });
+
+    it('모르는 섹터는 기타로 떨어뜨린다', async () => {
+      seedStorage(2, [legacy({ sector: '없어진섹터' })]);
+
+      await useHoldingsStore.persist.rehydrate();
+
+      expect(state().holdings[0].sector).toBe('기타');
+    });
+
+    it('저장 형태 자체가 깨졌으면 seed로 떨어진다', async () => {
+      seedStorage(1, 'not-an-array' as unknown as unknown[]);
+
+      await useHoldingsStore.persist.rehydrate();
+
+      expect(state().holdings).toEqual(MOCK_HOLDINGS);
+    });
   });
 });

@@ -7,12 +7,15 @@ import {
   useHoldingsStore,
   useSelectedHolding,
 } from '@/entities/holding';
+import { useHoldingQuotes } from '@/features/holding-quotes';
 import { AVERAGING_PANEL_ID } from '@/shared/config/anchors';
+import { Button } from '@/shared/ui/button';
 import { formatPercent, formatQuantity, formatWon } from '@/shared/lib/format-won';
 import { AnimatedNumber } from '@/shared/ui/animated-number';
 import { Slider } from '@/shared/ui/slider';
 import { cn } from '@/shared/lib/utils';
 import { PANEL, PANEL_RIGHT_COLUMN, PANEL_SPLIT } from '../lib/panel';
+import { AveragingPanelSkeleton } from './averaging-panel-skeleton';
 import { GapGauge } from './gap-gauge';
 
 const SLIDER_MAX = 200;
@@ -47,25 +50,55 @@ function EmptyPanel() {
   );
 }
 
+/**
+ * 시세 없이는 시뮬레이션 자체가 성립하지 않을 때.
+ *
+ * 물타기 계산은 전부 현재가에서 출발한다. 목데이터로 채워 그럴듯한 숫자를 보여주면
+ * 사용자가 그 값을 믿고 실제로 매수할 수 있으므로, 실패는 실패로 보여준다.
+ */
+function QuoteErrorPanel({ name, onRetry }: { name: string; onRetry: () => void }) {
+  return (
+    <aside id={AVERAGING_PANEL_ID} className={cn(PANEL, 'gap-3')}>
+      <h2 className="text-base font-bold">물타기 시뮬레이터</h2>
+      <p className="text-muted-foreground text-[13px] leading-relaxed">
+        {name}의 시세를 불러오지 못했습니다. 현재가를 알 수 없어 계산을 할 수 없어요.
+      </p>
+      <div>
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+          다시 시도
+        </Button>
+      </div>
+    </aside>
+  );
+}
+
 export function AveragingPanel() {
   const holding = useSelectedHolding();
+  const { prices, status, refetch } = useHoldingQuotes();
   const addQuantity = useHoldingsStore((s) => s.addQuantity);
   const targetAvgInput = useHoldingsStore((s) => s.targetAvgInput);
   const setAddQuantity = useHoldingsStore((s) => s.setAddQuantity);
   const setTargetAvgInput = useHoldingsStore((s) => s.setTargetAvgInput);
 
+  // 훅은 전부 위에서 부른다. 조기 반환은 그 뒤에.
   if (!holding) return <EmptyPanel />;
 
-  const result = calcAveraging(holding, addQuantity);
-  const gapRate = calcPriceGapRate(holding);
+  const price = prices[holding.code];
+  if (price === undefined) {
+    if (status === 'pending') return <AveragingPanelSkeleton />;
+    return <QuoteErrorPanel name={holding.name} onRetry={refetch} />;
+  }
+
+  const result = calcAveraging(holding, price, addQuantity);
+  const gapRate = calcPriceGapRate(holding, price);
   const needsRise = result.breakEvenRate > 0;
 
-  const targetQuantity = calcQuantityForTargetAverage(holding, Number(targetAvgInput));
+  const targetQuantity = calcQuantityForTargetAverage(holding, price, Number(targetAvgInput));
   const targetMessage = buildTargetMessage(
     targetAvgInput,
     targetQuantity,
     holding.avgPrice,
-    holding.currentPrice,
+    price.current,
   );
 
   return (
@@ -85,7 +118,7 @@ export function AveragingPanel() {
       <div className={PANEL_SPLIT}>
         <div className="flex flex-col gap-[18px]">
           <div className="bg-subtle grid grid-cols-3 gap-2 rounded-xl px-4 py-3.5 text-xs">
-            <StatCell label="현재가" value={formatWon(holding.currentPrice)} />
+            <StatCell label="현재가" value={formatWon(price.current)} />
             <StatCell label="평단가" value={formatWon(holding.avgPrice)} />
             <StatCell
               label="평단 대비"
@@ -97,7 +130,7 @@ export function AveragingPanel() {
           <div className="flex flex-col gap-2">
             <span className="text-muted-foreground text-xs font-semibold">현재가 · 평단 갭</span>
             <GapGauge
-              currentPrice={holding.currentPrice}
+              currentPrice={price.current}
               avgPrice={holding.avgPrice}
               newAvgPrice={result.newAvgPrice}
             />
