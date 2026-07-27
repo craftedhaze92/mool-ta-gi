@@ -137,9 +137,3 @@ function describe(error: unknown): string {
 export function invalidateToken(): void {
   cached = null;
 }
-
-/** 테스트 전용. 모듈 스코프 캐시를 비운다. */
-export function __resetTokenCache(): void {
-  cached = null;
-  inFlight = null;
-}
