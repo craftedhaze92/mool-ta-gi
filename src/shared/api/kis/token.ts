@@ -48,6 +48,10 @@ let inFlight: Promise<string> | null = null;
  *
  * 캐시가 살아 있으면 그대로, 이미 발급 중이면 그 promise를 공유한다. 후자가 없으면
  * 동시에 들어온 N개의 요청이 각각 발급을 시도해 유량 제한과 알림 폭탄을 부른다.
+ *
+ * 시세 조회와 달리 이 호출은 paced()를 태우지 않는다. 토큰 발급은 별도 한도(분당 1회)를
+ * 쓰는 데다 24시간 캐시되어 거의 나가지 않고, 무엇보다 paced() 안에서 다시 paced()를
+ * 부르는 중첩을 피하기 위해서다.
  */
 export async function getAccessToken(): Promise<string> {
   if (cached !== null && cached.expiresAt - REFRESH_MARGIN_MS > Date.now()) {

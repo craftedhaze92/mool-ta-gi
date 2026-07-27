@@ -3,6 +3,7 @@ import { getServerEnv } from '@/shared/config/env';
 import type { Quote } from '../quote-contract';
 import { KisError } from './errors';
 import { toQuote } from './mapper';
+import { paced } from './rate-limit';
 import type { KisMultiPriceRow } from './raw-types';
 import {
   MULTI_PRICE_CHUNK_SIZE,
@@ -29,14 +30,6 @@ const TR_ID_MULTI_PRICE = 'FHKST11300006';
 /** J: KRX 주식·ETF·ETN */
 const MARKET_DIV_CODE = 'J';
 const QUOTE_TIMEOUT_MS = 5000;
-
-/**
- * 청크 사이의 최소 간격.
- *
- * 실측한 한도가 초당 약 1건이라 여유를 두고 1.2초로 잡는다. 조회 상한이 50종목이므로
- * 청크는 최대 2개, 즉 이 지연이 실제로 붙는 경우는 30종목을 넘길 때뿐이다.
- */
-const CHUNK_INTERVAL_MS = 1200;
 
 /**
  * 실제 브라우저 User-Agent.
@@ -87,14 +80,14 @@ async function runBatches(codes: string[], token: string): Promise<FetchQuotesRe
   const failed: string[] = [];
 
   /*
-   * 청크는 순차로 돈다. 병렬로 쏘면 초당 1건 한도에 곧바로 걸린다.
+   * 청크는 순차로 돈다. 호출 간격은 paced()가 전역으로 지킨다 — 다른 라우트나 다른
+   * 사용자의 요청과도 간격이 맞춰져야 하기 때문이다 (rate-limit.ts 참고).
+   *
    * 한도 초과와 토큰 거절은 종목이 아니라 호출 전체의 문제이므로 여기서 잡지 않고
    * 위로 올린다 — 삼켰다가는 전 종목이 '시세 없음'으로 표시되고 원인은 로그에만 남는다.
    */
-  for (const [index, part] of chunks.entries()) {
-    if (index > 0) await sleep(CHUNK_INTERVAL_MS);
-
-    const rows = await fetchChunk(part, token, env);
+  for (const part of chunks) {
+    const rows = await paced(() => fetchChunk(part, token, env));
     mapChunk(part, rows, quotes, failed);
   }
 
@@ -212,10 +205,6 @@ function chunk<T>(items: T[], size: number): T[][] {
   const result: T[][] = [];
   for (let i = 0; i < items.length; i += size) result.push(items.slice(i, i + size));
   return result;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** 로그용 요약. KisError의 detail(원문 msg_cd/msg1)까지 남겨야 진단이 된다. */
