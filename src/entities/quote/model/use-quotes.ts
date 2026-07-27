@@ -1,22 +1,10 @@
 'use client';
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { marketPollingOptions } from '@/shared/api/polling';
 import type { Quote, QuotesResponse } from '@/shared/api/quote-contract';
-import { isMarketOpen } from '@/shared/lib/market-hours';
-import { fetchQuotes, QuoteFetchError } from '../api/fetch-quotes';
+import { fetchQuotes } from '../api/fetch-quotes';
 import { normalizeCodes, quotesQueryKey } from './query-keys';
-
-/** 폴링 주기. 장중에만 돈다. */
-const POLL_INTERVAL_MS = 30_000;
-
-/**
- * 캐시를 신선하다고 보는 시간.
- *
- * 장중 여부로 분기하지 않는다. staleTime은 렌더 도중에 읽히는 값이라, 빌드 타임에
- * 프리렌더되는 서버와 클라이언트가 서로 다른 값을 계산해 hydration mismatch를 만든다.
- * 폴링 주기보다 짧게 두어 위젯이 재마운트돼도 직전 응답을 재사용하게 한다.
- */
-const STALE_TIME_MS = 20_000;
 
 export interface QuotesResult {
   /** 종목코드 → 시세. 시세를 못 받은 코드는 키가 없다 */
@@ -55,27 +43,8 @@ export function useQuotes(
     queryFn: ({ signal }) => fetchQuotes(normalized, signal),
     enabled: options.enabled !== false && normalized.length > 0,
 
-    staleTime: STALE_TIME_MS,
-
-    /*
-     * 함수형이라 렌더가 아니라 타이머 컨텍스트에서 평가된다 → SSR 안전하다.
-     * 덤으로 15:30을 지나는 순간 다음 tick에서 스스로 false로 떨어져 폴링이 멈춘다.
-     */
-    refetchInterval: () => (isMarketOpen(new Date()) ? POLL_INTERVAL_MS : false),
-    // 숨은 탭까지 폴링하면 유량만 축낸다.
-    refetchIntervalInBackground: false,
-    refetchOnWindowFocus: () => isMarketOpen(new Date()),
-
-    /*
-     * 429(유량 초과)는 재시도하지 않는다. 실측한 KIS 한도가 초당 약 1건이라, 곧바로
-     * 다시 쏘면 한도를 더 악화시키기만 한다. 그 외의 실패만 한 번, 한도를 피할 만큼
-     * 넉넉히 기다렸다가 재시도한다. 나머지는 사용자의 '다시 시도' 버튼에 맡긴다.
-     */
-    retry: (failureCount, error) => {
-      if (error instanceof QuoteFetchError && error.status === 429) return false;
-      return failureCount < 1;
-    },
-    retryDelay: 1500,
+    // 장 시간에 맞춘 폴링·재시도 정책. 지수 조회와 같은 규칙을 쓴다.
+    ...marketPollingOptions,
 
     /*
      * 종목을 추가·삭제하면 queryKey가 바뀐다. 이게 없으면 그 순간 대시보드 전체가

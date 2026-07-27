@@ -1,30 +1,63 @@
+'use client';
+
 import { RefreshCw } from 'lucide-react';
-import { MOCK_MARKET_INDICES, type MarketIndex } from '@/entities/market-index';
+import { MARKET_INDICES, useMarketIndices, type MarketIndex } from '@/entities/market-index';
 import { formatKstTime } from '@/shared/lib/dayjs';
 import { formatPercent } from '@/shared/lib/format-won';
 import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/shared/ui/badge';
+import { Skeleton } from '@/shared/ui/skeleton';
 
-function IndexQuote({ quote }: { quote: MarketIndex }) {
-  const direction = Math.sign(quote.change); // 1 | 0 | -1
+/**
+ * 지수 한 건.
+ *
+ * 이름은 조회 전에도 아는 값이라 항상 그린다. 값만 상태에 따라 갈린다 —
+ * 로딩 중이면 스켈레톤, 못 받았으면 '—'. 블록을 통째로 감추면 뭐가 없어졌는지 알 수 없다.
+ */
+function IndexQuote({
+  name,
+  index,
+  pending,
+}: {
+  name: string;
+  index: MarketIndex | undefined;
+  pending: boolean;
+}) {
+  // 지수 한 건은 통째로 붙어 있어야 한다. 좁아지면 지수끼리 줄이 나뉘지, 값과 등락률이 갈라지면 안 된다
+  const shell = (children: React.ReactNode) => (
+    <div className="flex shrink-0 items-baseline gap-[7px] whitespace-nowrap">
+      <span className="text-muted-foreground font-semibold">{name}</span>
+      {children}
+    </div>
+  );
+
+  if (index === undefined) {
+    return shell(
+      pending ? (
+        <Skeleton className="h-3.5 w-28" />
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      ),
+    );
+  }
+
+  const direction = Math.sign(index.change); // 1 | 0 | -1
   const tone = direction > 0 ? 'text-up' : direction < 0 ? 'text-down' : 'text-muted-foreground';
   const arrow = direction > 0 ? '▲' : direction < 0 ? '▼' : '−';
 
-  return (
-    // 지수 한 건은 통째로 붙어 있어야 한다. 좁아지면 지수끼리 줄이 나뉘지, 값과 등락률이 갈라지면 안 된다
-    <div className="flex shrink-0 items-baseline gap-[7px] whitespace-nowrap">
-      <span className="text-muted-foreground font-semibold">{quote.name}</span>
+  return shell(
+    <>
       <span className="font-bold">
-        {quote.value.toLocaleString('ko-KR', {
+        {index.value.toLocaleString('ko-KR', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}
       </span>
       <span className={cn('font-semibold', tone)}>
         <span aria-hidden="true">{arrow}</span>
-        {Math.abs(quote.change).toFixed(2)} ({formatPercent(quote.changeRate, { signed: true })})
+        {Math.abs(index.change).toFixed(2)} ({formatPercent(index.changeRate, { signed: true })})
       </span>
-    </div>
+    </>,
   );
 }
 
@@ -43,10 +76,10 @@ export interface MarketHeaderProps {
 }
 
 /**
- * 시세 상태는 props로 받는다.
+ * 보유 종목 시세의 상태는 props로 받고, 지수는 이 위젯이 직접 구독한다.
  *
- * 이 위젯을 프레젠테이셔널로 두고 시세 배선은 views/dashboard 한 곳에 모으기 위해서다.
- * KOSPI/KOSDAQ 지수는 아직 목데이터다 — 지수는 별도 엔드포인트라 이번 범위 밖이다.
+ * 시세 상태(마지막 갱신 시각·실패 여부)는 대시보드 전체의 관심사라 views에서 내려주는 게
+ * 맞지만, 지수는 이 헤더만 쓰는 데이터라 views를 거쳐 props로 흘릴 이유가 없다.
  */
 export function MarketHeader({
   fetchedAt,
@@ -54,6 +87,8 @@ export function MarketHeader({
   quoteFailed = false,
   onRetry,
 }: MarketHeaderProps = {}) {
+  const indices = useMarketIndices();
+
   return (
     <header className="flex flex-col items-start gap-2 pt-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-y-3 sm:pt-6">
       <div className="flex items-baseline gap-2.5">
@@ -74,8 +109,14 @@ export function MarketHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs tabular-nums sm:gap-x-6 sm:text-[13px]">
-        {MOCK_MARKET_INDICES.map((quote) => (
-          <IndexQuote key={quote.name} quote={quote} />
+        {/* 표시 순서는 조회 대상 목록을 그대로 따른다 (응답 순서에 기대지 않는다) */}
+        {MARKET_INDICES.map(({ code, name }) => (
+          <IndexQuote
+            key={code}
+            name={name}
+            index={indices.byCode[code]}
+            pending={indices.isPending}
+          />
         ))}
 
         <div className="flex items-center gap-2">

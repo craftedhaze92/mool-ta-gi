@@ -37,17 +37,18 @@ export const quotesResponseSchema = z.object({
   fetchedAt: z.string(),
 });
 
-export const quotesErrorBodySchema = z.object({
-  error: z.object({
-    code: z.enum(['INVALID_REQUEST', 'UPSTREAM_AUTH', 'RATE_LIMITED', 'UPSTREAM_ERROR']),
-    message: z.string(),
-  }),
-});
-
 export type Quote = z.output<typeof quoteSchema>;
 export type QuotesResponse = z.output<typeof quotesResponseSchema>;
-export type QuotesErrorBody = z.output<typeof quotesErrorBodySchema>;
-export type QuoteErrorCode = QuotesErrorBody['error']['code'];
+
+/*
+ * 실패 응답은 라우트를 가리지 않고 같은 모양이라 error-contract.ts에 있다.
+ * 기존 이름으로 쓰던 곳이 있어 여기서 다시 내보낸다.
+ */
+export { apiErrorBodySchema as quotesErrorBodySchema } from './error-contract';
+export type {
+  ApiErrorBody as QuotesErrorBody,
+  ApiErrorCode as QuoteErrorCode,
+} from './error-contract';
 
 export type ParsedCodes = { ok: true; codes: string[] } | { ok: false; message: string };
 
