@@ -150,6 +150,15 @@ export const useHoldingsStore = create(
  * false인 동안 스토어는 seed 상태를 들고 있으므로 화면에 실제 데이터를 그리면 안 된다.
  * 대시보드 뷰 한 곳에서만 이 훅을 쓰고, 위젯들은 이 사정을 모르게 둔다.
  */
+/**
+ * 복원 트리거가 한 번만 돌게 막는다.
+ *
+ * 이 훅을 부르는 곳이 대시보드 뷰 하나였을 때는 필요 없었지만, 시세 조회 피처도 같은
+ * 신호를 쓰면서 호출부가 둘이 됐다. 가드가 없으면 마운트 때마다 rehydrate()가 중복으로
+ * 걸린다.
+ */
+let rehydrateTriggered = false;
+
 export function useHoldingsHydrated(): boolean {
   // persist는 React 바깥의 외부 저장소다. 구독은 useSyncExternalStore에 맡기고
   // 효과에서는 복원 트리거만 건다 (효과 안에서 setState 하지 않기 위해서다).
@@ -160,9 +169,10 @@ export function useHoldingsHydrated(): boolean {
   );
 
   useEffect(() => {
-    if (!useHoldingsStore.persist.hasHydrated()) {
-      void useHoldingsStore.persist.rehydrate();
-    }
+    if (rehydrateTriggered || useHoldingsStore.persist.hasHydrated()) return;
+
+    rehydrateTriggered = true;
+    void useHoldingsStore.persist.rehydrate();
   }, []);
 
   return hydrated;

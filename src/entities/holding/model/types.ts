@@ -39,6 +39,26 @@ export interface Holding {
  */
 export type HoldingInput = Omit<Holding, 'id' | 'prevClose'>;
 
+/**
+ * 시세 한 종목분.
+ *
+ * entities/quote의 Quote가 이 타입을 **구조적으로** 만족한다. 이름이 아니라 형태로 맞추는
+ * 이유는 FSD 규칙상 동일 레이어 슬라이스끼리 import할 수 없기 때문이다. 덕분에
+ * entities/holding은 시세가 어디서 오는지 전혀 모른 채 계산만 한다.
+ */
+export interface PriceSnapshot {
+  current: number;
+  prevClose: number;
+}
+
+/**
+ * 종목코드 → 시세.
+ *
+ * 시세를 못 받은 코드는 키가 없다. tsconfig에 noUncheckedIndexedAccess가 없으므로
+ * 값 타입에 undefined를 명시해, 조회 결과를 그냥 쓰지 못하게 한다.
+ */
+export type PriceMap = Readonly<Record<string, PriceSnapshot | undefined>>;
+
 /** Holding에서 파생되는 표시용 지표. 저장하지 않고 매번 계산한다. */
 export interface HoldingMetrics {
   /** 매입금액 = quantity × avgPrice */

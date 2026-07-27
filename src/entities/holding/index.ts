@@ -5,6 +5,8 @@ export type {
   HoldingInput,
   HoldingMetrics,
   PortfolioSummary,
+  PriceMap,
+  PriceSnapshot,
   Sector,
 } from './model/types';
 
