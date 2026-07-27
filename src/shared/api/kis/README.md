@@ -1,8 +1,8 @@
 # KIS 시세 어댑터
 
-한국투자증권 OpenAPI(KIS)를 감싸는 **서버 전용** 모듈이다. `app/api/quotes` 라우트 핸들러만
-이걸 호출하고, 브라우저는 항상 우리 BFF(`/api/quotes`)만 본다. API 키가 클라이언트로
-새어나가지 않게 하려는 구조다.
+한국투자증권 OpenAPI(KIS)를 감싸는 **서버 전용** 모듈이다. `app/api/quotes`와
+`app/api/indices` 라우트 핸들러만 이걸 호출하고, 브라우저는 항상 우리 BFF만 본다.
+API 키가 클라이언트로 새어나가지 않게 하려는 구조다.
 
 `index.ts`를 포함한 모든 파일이 `import 'server-only'`로 시작한다. 클라이언트 컴포넌트에서
 실수로 import하면 `next build`가 실패한다. 예외는 `mapper.ts` 하나 — 순수 변환 함수라
@@ -154,10 +154,23 @@ KIS로 나가는 모든 요청은 `paced()` 게이트를 지난다. 모듈 스�
 `POST /oauth2/tokenP`를 짧은 간격으로 두 번 부르면 두 번째가 거절된다(실측). 커뮤니티에
 널리 알려진 "1분에 1회" 제한이 실재한다는 뜻이다. 캐싱이 선택이 아니라 필수인 이유다.
 
+## 지수 조회 (`indices.ts`)
+
+`GET /uapi/domestic-stock/v1/quotations/inquire-index-price`, tr_id **`FHPUP02100000`**.
+`FID_COND_MRKT_DIV_CODE=U`(업종), `FID_INPUT_ISCD`는 `0001`(KOSPI) / `1001`(KOSDAQ).
+
+**한 번에 한 지수만 받는다.** 시세처럼 묶어 보낼 방법이 없어 지수 수만큼 호출한다.
+
+필드명이 주식 시세와 완전히 다르다 — `bstp_nmix_prpr`(현재지수),
+`bstp_nmix_prdy_vrss`(전일 대비), `bstp_nmix_prdy_ctrt`(전일 대비율). 부호 코드
+(`prdy_vrss_sign`)만 주식과 같은 체계라, 매퍼는 따로 두되 `num`/`signOf`는 재사용한다.
+
+**응답에 지수를 식별할 필드가 없다.** 업종명조차 오지 않는다. 그래서 코드와 이름은 응답이
+아니라 요청할 때 쓴 값에서 받는다. 조회 대상 목록은 `../indices-contract.ts`의
+`MARKET_INDICES`가 단일 출처다.
+
 ## 아직 하지 않은 것
 
-- **KOSPI/KOSDAQ 지수** — `market-header` 위젯은 여전히 목데이터를 쓴다.
-  지수는 별도 엔드포인트(`inquire-index-price`)라 다음 작업으로 남겼다.
 - **공휴일 휴장 판정** — `shared/lib/market-hours.ts`는 평일 09:00~15:30만 본다.
 - **유량 제한 초과 시 재시도** — 지금은 곧바로 429로 내보내고 사용자의 '다시 시도'에
   맡긴다. 백오프 재시도를 넣으면 한도를 더 악화시킬 수 있어 보류했다.

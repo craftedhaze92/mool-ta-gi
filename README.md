@@ -36,7 +36,8 @@ pnpm dev
 ## 시세는 BFF를 거친다
 
 ```
-브라우저 ──> /api/quotes ──> 한국투자증권 OpenAPI
+브라우저 ──> /api/quotes   ──┐
+        └──> /api/indices  ──┴──> 한국투자증권 OpenAPI
              (우리 서버)
 ```
 
@@ -44,10 +45,17 @@ pnpm dev
 `src/shared/api/kis/`는 전부 `import 'server-only'`로 시작해서, 클라이언트 컴포넌트가 실수로
 import하면 `next build`가 실패한다.
 
-- **요청**: `GET /api/quotes?codes=005930,000660` (6자리 숫자, 최대 50개)
-- **응답**: `{ quotes: Quote[], failed: string[], fetchedAt: string }`
-- KIS 원문 에러(`msg_cd`/`msg1`)는 응답에 나가지 않는다. 서버 로그에만 남고 사용자에게는
-  정규화된 문구가 간다.
+| 엔드포인트                                               | 응답                             |
+| -------------------------------------------------------- | -------------------------------- |
+| `GET /api/quotes?codes=005930,000660` (6자리, 최대 50개) | `{ quotes, failed, fetchedAt }`  |
+| `GET /api/indices` (파라미터 없음)                       | `{ indices, failed, fetchedAt }` |
+
+두 라우트를 나눠 둔 이유가 있다. 시세 쿼리 키에는 보유 종목코드가 들어가는데, 지수를 여기
+합치면 종목을 추가·삭제할 때마다 지수까지 다시 불린다. 지수는 보유 종목과 무관하므로 캐시
+키가 상수여야 한다.
+
+KIS 원문 에러(`msg_cd`/`msg1`)는 응답에 나가지 않는다. 서버 로그에만 남고 사용자에게는
+정규화된 문구가 간다.
 
 KIS 연동의 세부 사항 — 토큰 캐시의 한계, 실측한 유량 제한, 배치 API를 쓰는 이유, 전일 종가로
 기준가를 쓰는 이유 — 는 **[`src/shared/api/kis/README.md`](src/shared/api/kis/README.md)** 에
@@ -64,6 +72,10 @@ KIS 연동의 세부 사항 — 토큰 캐시의 한계, 실측한 유량 제한
 **초당 약 1건**이었다. 그래서 단건 조회 대신 30종목을 한 번에 받는 배치 API를 쓴다.
 계정마다 다를 수 있다.
 
+그리고 KIS로 나가는 모든 요청은 `rate-limit.ts`의 전역 게이트를 지난다. 호출부마다 sleep을
+넣는 방식으로는 부족하다 — BFF는 요청마다 핸들러가 따로 돌기 때문에, 브라우저가 두 라우트를
+동시에 부르거나 **사용자가 둘이기만 해도** 서로의 간격을 모른 채 KIS를 친다.
+
 ## 아키텍처
 
 FSD(Feature-Sliced Design) 경량 5레이어. 자세한 규칙은 [CLAUDE.md](CLAUDE.md) 참고.
@@ -74,14 +86,17 @@ app → views → widgets → features → entities → shared
 
 시세 관련 코드가 이 구조에 놓인 자리:
 
-| 위치                           | 역할                                                |
-| ------------------------------ | --------------------------------------------------- |
-| `shared/api/kis/`              | KIS 어댑터 (서버 전용)                              |
-| `shared/api/quote-contract.ts` | `/api/quotes` 요청·응답 계약 (서버·클라이언트 공유) |
-| `shared/lib/market-hours.ts`   | KST 장 운영시간 판정 (순수 함수)                    |
-| `entities/quote`               | `Quote` 타입 + `useQuotes` 훅                       |
-| `entities/holding`             | 보유 종목 + 파생 계산 (시세를 인자로 받는다)        |
-| `features/holding-quotes`      | 보유 종목 × 시세 조합                               |
+| 위치                             | 역할                                             |
+| -------------------------------- | ------------------------------------------------ |
+| `shared/api/kis/`                | KIS 어댑터 (서버 전용). 간격 제어·토큰 캐시 포함 |
+| `shared/api/quote-contract.ts`   | `/api/quotes` 계약 (서버·클라이언트 공유)        |
+| `shared/api/indices-contract.ts` | `/api/indices` 계약 + 조회 대상 지수 목록        |
+| `shared/api/polling.ts`          | 장 시간에 맞춘 폴링·재시도 정책 (시세·지수 공용) |
+| `shared/lib/market-hours.ts`     | KST 장 운영시간 판정 (순수 함수)                 |
+| `entities/quote`                 | `Quote` 타입 + `useQuotes` 훅                    |
+| `entities/market-index`          | `MarketIndex` 타입 + `useMarketIndices` 훅       |
+| `entities/holding`               | 보유 종목 + 파생 계산 (시세를 인자로 받는다)     |
+| `features/holding-quotes`        | 보유 종목 × 시세 조합                            |
 
 **두 엔티티는 서로를 import하지 않는다.** FSD가 동일 레이어 슬라이스 간 import를 금지하기
 때문이다. `entities/holding`이 `PriceSnapshot { current, prevClose }`라는 구조적 타입을 선언하고,
@@ -104,12 +119,12 @@ pnpm exec tsc --noEmit
 pnpm format
 ```
 
-테스트는 MSW로 `/api/quotes`를 가로챈다(`src/shared/api/mocks/quotes.ts`). 실제 네트워크를 치는
-테스트가 생기면 `onUnhandledRequest: 'error'`가 즉시 잡아낸다.
+테스트는 MSW로 BFF 라우트를 가로챈다(`src/shared/api/mocks/`). 실제 네트워크를 치는 테스트가
+생기면 `onUnhandledRequest: 'error'`가 즉시 잡아낸다. 뒤집어 말하면 **새 엔드포인트를 추가할
+때 기본 핸들러도 함께 등록해야 한다** — 안 그러면 그 엔드포인트를 건드리는 테스트가 전부 깨진다
+(`src/shared/testing/msw-server.ts`).
 
 ## 아직 하지 않은 것
 
-- **KOSPI/KOSDAQ 지수** — 헤더의 지수는 아직 목데이터다. 지수는 별도 엔드포인트
-  (`inquire-index-price`)라 다음 작업으로 남겼다.
 - **공휴일 휴장** — `isMarketOpen`은 평일 09:00~15:30만 본다. 신정·설·추석에도 장중으로 판정한다.
-- **토큰 공유 저장소** — 위 참고.
+- **토큰·간격 제어 공유 저장소** — 둘 다 인스턴스 로컬이다. 위 참고.
