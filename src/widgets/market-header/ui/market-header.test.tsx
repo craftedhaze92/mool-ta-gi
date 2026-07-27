@@ -34,6 +34,27 @@ describe('MarketHeader 지수 표시', () => {
   /*
    * 이름은 조회 전에도 아는 값이라 항상 보여야 한다. 값 자리만 가린다.
    */
+  /*
+   * 방향 기호가 숫자에 바로 붙는 표기라, 보합에 '−'를 쓰면 '−0.00'이 되어 음수 0으로
+   * 읽힌다. 장 시작 전에는 지수가 늘 보합이라 매일 아침 보이는 화면이다.
+   */
+  it('보합이면 화살표를 붙이지 않는다', async () => {
+    server.use(
+      indicesHandler({
+        '0001': { value: 6755.75, change: 0, changeRate: 0 },
+        '1001': { value: 764.86, change: 0, changeRate: 0 },
+      }),
+    );
+
+    renderWithQuery(<MarketHeader />);
+
+    await screen.findByText('6,755.75');
+    expect(screen.getAllByText(/^0\.00 \(0\.00%\)$/)).toHaveLength(2);
+    expect(screen.queryByText('▲')).not.toBeInTheDocument();
+    expect(screen.queryByText('▼')).not.toBeInTheDocument();
+    expect(screen.queryByText('−')).not.toBeInTheDocument();
+  });
+
   it('로딩 중에도 지수 이름은 보이고 값 자리만 스켈레톤이다', () => {
     server.use(indicesPendingHandler());
 

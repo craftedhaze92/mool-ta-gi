@@ -43,7 +43,13 @@ function IndexQuote({
 
   const direction = Math.sign(index.change); // 1 | 0 | -1
   const tone = direction > 0 ? 'text-up' : direction < 0 ? 'text-down' : 'text-muted-foreground';
-  const arrow = direction > 0 ? '▲' : direction < 0 ? '▼' : '−';
+
+  /*
+   * 보합일 때는 화살표를 붙이지 않는다. 방향 기호가 숫자에 바로 붙는 표기라서, 보합에
+   * '−'를 쓰면 '−0.00'이 되어 음수 0으로 읽힌다. 장 시작 전에는 지수가 늘 보합이라
+   * 매일 아침 보이는 화면이다.
+   */
+  const arrow = direction > 0 ? '▲' : direction < 0 ? '▼' : null;
 
   return shell(
     <>
@@ -54,7 +60,7 @@ function IndexQuote({
         })}
       </span>
       <span className={cn('font-semibold', tone)}>
-        <span aria-hidden="true">{arrow}</span>
+        {arrow !== null && <span aria-hidden="true">{arrow}</span>}
         {Math.abs(index.change).toFixed(2)} ({formatPercent(index.changeRate, { signed: true })})
       </span>
     </>,
