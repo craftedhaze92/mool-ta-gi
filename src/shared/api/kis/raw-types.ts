@@ -97,3 +97,33 @@ export const RATE_LIMIT_MSG_CD = 'EGW00201';
  * 해도 우리 캐시가 조용히 죽는다. 만료 시각만 믿고 있으면 그때부터 모든 조회가 실패한다.
  */
 export const TOKEN_INVALID_MSG_CDS = ['EGW00121', 'EGW00123'];
+
+/**
+ * GET /uapi/domestic-stock/v1/quotations/inquire-index-price (tr_id: FHPUP02100000)
+ * 국내업종 현재지수. 한 번에 **한 지수만** 조회된다.
+ *
+ * 요청은 FID_COND_MRKT_DIV_CODE=U, FID_INPUT_ISCD={업종코드}.
+ * output은 객체 하나이고, 필드명이 주식 시세와 완전히 다르다(bstp_nmix_* 접두사).
+ * 부호 코드(prdy_vrss_sign)만 주식과 같은 체계를 쓴다.
+ *
+ * 지수 이름 필드는 응답에 없다. 이름은 우리가 붙인다(indices-contract.ts).
+ */
+export const indexPriceOutputSchema = z.object({
+  /** 업종 지수 현재가 */
+  bstp_nmix_prpr: z.string().optional(),
+  /** 업종 지수 전일 대비 */
+  bstp_nmix_prdy_vrss: z.string().optional(),
+  /** 전일 대비 부호. 1 상한 · 2 상승 · 3 보합 · 4 하한 · 5 하락 */
+  prdy_vrss_sign: z.string().optional(),
+  /** 업종 지수 전일 대비율(%) */
+  bstp_nmix_prdy_ctrt: z.string().optional(),
+});
+
+export type KisIndexPriceOutput = z.output<typeof indexPriceOutputSchema>;
+
+export const indexPriceResponseSchema = z.object({
+  rt_cd: z.string(),
+  msg_cd: z.string().optional(),
+  msg1: z.string().optional(),
+  output: indexPriceOutputSchema.optional(),
+});

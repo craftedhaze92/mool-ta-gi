@@ -16,8 +16,13 @@ export class QuoteMappingError extends Error {
   }
 }
 
-/** KIS는 모든 수치를 문자열로 준다. 쉼표가 섞여 오는 필드가 있어 함께 제거한다. */
-function num(raw: string | undefined, field: string): number {
+/**
+ * KIS는 모든 수치를 문자열로 준다. 쉼표가 섞여 오는 필드가 있어 함께 제거한다.
+ *
+ * 지수 매퍼(index-mapper.ts)도 같은 규칙을 쓰므로 export한다. 두 벌로 두면 한쪽만 고치는
+ * 실수가 난다.
+ */
+export function num(raw: string | undefined, field: string): number {
   if (raw === undefined || raw.trim() === '') throw new QuoteMappingError(field, raw);
 
   const parsed = Number(raw.replace(/,/g, ''));
@@ -37,8 +42,10 @@ function numOrZero(raw: string | undefined): number {
 /**
  * 전일 대비 부호 코드를 -1 / 0 / 1로 바꾼다.
  * 1 상한 · 2 상승 · 3 보합 · 4 하한 · 5 하락.
+ *
+ * 지수 응답도 같은 부호 체계를 쓰므로 export한다.
  */
-function signOf(raw: string | undefined): -1 | 0 | 1 {
+export function signOf(raw: string | undefined): -1 | 0 | 1 {
   switch (raw) {
     case '1':
     case '2':
