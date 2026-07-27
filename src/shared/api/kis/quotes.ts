@@ -3,34 +3,40 @@ import { getServerEnv } from '@/shared/config/env';
 import type { Quote } from '../quote-contract';
 import { KisError } from './errors';
 import { toQuote } from './mapper';
-import { inquirePriceResponseSchema, RATE_LIMIT_MSG_CD } from './raw-types';
-import { getAccessToken } from './token';
+import type { KisMultiPriceRow } from './raw-types';
+import {
+  MULTI_PRICE_CHUNK_SIZE,
+  multiPriceResponseSchema,
+  RATE_LIMIT_MSG_CD,
+  TOKEN_INVALID_MSG_CDS,
+} from './raw-types';
+import { getAccessToken, invalidateToken } from './token';
 
 /**
- * 국내주식 현재가 조회.
+ * 국내주식 시세 조회.
  *
- * KIS에는 관심종목 멀티시세(intstock-multprice, tr_id FHKST11300006, 최대 30종목)라는
- * 배치 API도 있다. 요청 수는 유리하지만 배치 하나가 실패하면 30종목이 통째로 날아가
- * '개별 종목 실패가 전체를 실패시키지 않는다'는 요구와 어긋난다. 그래서 단건 API를
- * 동시성 제한과 함께 쓴다.
+ * 관심종목(멀티종목) 시세조회 API를 쓴다. 한 번에 30종목까지 받는다.
  *
- * TODO: 종목 수가 수십 개로 늘어 요청 수가 문제가 되면 배치 API 도입을 재검토한다.
- *       응답 키가 완전히 다르므로(inter2_prpr 등) 매퍼를 하나 더 만들어야 한다.
+ * 단건 API(inquire-price)를 쓰지 않는 이유는 유량 제한이다. 실측해 보니 이 계정의
+ * 한도는 문서가 시사하는 초당 20건이 아니라 **초당 약 1건**이었다(1초 간격 30회는
+ * 전부 성공, 0.5초 간격은 10회 중 3회가 EGW00201). 단건으로 가면 10종목 조회에만
+ * 10초가 넘게 걸려 쓸 수 없다. 배치는 같은 10종목을 호출 1회로 끝낸다.
+ *
+ * 종목 단위 실패 격리는 배치에서도 유지된다 — 아래 mapChunk 주석 참고.
  */
 
-const TR_ID_INQUIRE_PRICE = 'FHKST01010100';
+const TR_ID_MULTI_PRICE = 'FHKST11300006';
 /** J: KRX 주식·ETF·ETN */
 const MARKET_DIV_CODE = 'J';
 const QUOTE_TIMEOUT_MS = 5000;
 
 /**
- * 동시 호출 수.
+ * 청크 사이의 최소 간격.
  *
- * 실전 계정의 유량 제한은 초당 약 20건이다(공식 샘플의 호출 간 sleep 0.05초).
- * 5로 두면 순간 부하가 한도의 1/4이고, 상한인 50종목도 최악 10라운드면 끝난다.
- * p-limit을 새로 들이는 대신 아래 15줄짜리 구현으로 해결한다.
+ * 실측한 한도가 초당 약 1건이라 여유를 두고 1.2초로 잡는다. 조회 상한이 50종목이므로
+ * 청크는 최대 2개, 즉 이 지연이 실제로 붙는 경우는 30종목을 넘길 때뿐이다.
  */
-const CONCURRENCY = 5;
+const CHUNK_INTERVAL_MS = 1200;
 
 /**
  * 실제 브라우저 User-Agent.
@@ -57,40 +63,90 @@ export interface FetchQuotesResult {
 export async function fetchQuotes(codes: string[]): Promise<FetchQuotesResult> {
   if (codes.length === 0) return { quotes: [], failed: [] };
 
-  const token = await getAccessToken();
+  try {
+    return await runBatches(codes, await getAccessToken());
+  } catch (error) {
+    if (!(error instanceof KisError) || error.kind !== 'token-invalid') throw error;
+
+    /*
+     * 들고 있던 토큰이 거절됐다. 만료 시각으로는 알 수 없는 상황이라(다른 프로세스가
+     * 발급하면 우리 토큰이 무효화된다) 캐시를 버리고 딱 한 번 다시 시도한다.
+     * 두 번째도 실패하면 진짜 인증 문제이므로 그대로 올려보낸다.
+     */
+    console.warn('[kis] 토큰이 거절되어 재발급 후 한 번 재시도한다.');
+    invalidateToken();
+    return await runBatches(codes, await getAccessToken());
+  }
+}
+
+async function runBatches(codes: string[], token: string): Promise<FetchQuotesResult> {
   const env = getServerEnv();
+  const chunks = chunk(codes, MULTI_PRICE_CHUNK_SIZE);
 
   const quotes: Quote[] = [];
   const failed: string[] = [];
 
-  await mapWithConcurrency(codes, CONCURRENCY, async (code) => {
-    try {
-      quotes.push(await fetchOneQuote(code, token, env));
-    } catch (error) {
-      // 유량 제한은 다른 종목도 똑같이 겪는다. 종목 단위로 삼키지 않고 위로 올린다.
-      if (error instanceof KisError && error.kind === 'rate-limit') throw error;
+  /*
+   * 청크는 순차로 돈다. 병렬로 쏘면 초당 1건 한도에 곧바로 걸린다.
+   * 한도 초과와 토큰 거절은 종목이 아니라 호출 전체의 문제이므로 여기서 잡지 않고
+   * 위로 올린다 — 삼켰다가는 전 종목이 '시세 없음'으로 표시되고 원인은 로그에만 남는다.
+   */
+  for (const [index, part] of chunks.entries()) {
+    if (index > 0) await sleep(CHUNK_INTERVAL_MS);
 
-      console.error('[kis] %s 시세 조회 실패: %s', code, describe(error));
-      failed.push(code);
-    }
-  });
-
-  // 입력 순서를 잃지 않게 정렬해서 돌려준다 (동시 실행이라 완료 순서는 뒤섞인다).
-  const order = new Map(codes.map((code, index) => [code, index]));
-  quotes.sort((a, b) => (order.get(a.code) ?? 0) - (order.get(b.code) ?? 0));
-  failed.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+    const rows = await fetchChunk(part, token, env);
+    mapChunk(part, rows, quotes, failed);
+  }
 
   return { quotes, failed };
 }
 
-async function fetchOneQuote(
-  code: string,
+/**
+ * 응답 행을 요청 종목에 맞춰 Quote로 옮긴다.
+ *
+ * **행은 요청 순서로 온다.** 조회에 실패한 종목도 행 자체는 돌아오는데, 그때는
+ * inter_shrn_iscd까지 빈 문자열이라 응답만 보고는 어느 종목이었는지 알 수 없다.
+ * 실측으로 확인한 동작이다 — ['005930','999999','000660']을 넣으면 행이
+ * [005930, (전부 빈 값), 000660] 순서로 온다. 그래서 코드가 아니라 인덱스로 맞춘다.
+ *
+ * 행이 모자라면(있어선 안 되지만) 남은 종목은 실패로 처리한다. 지어낸 값을 그리느니
+ * '시세 없음'이 낫다.
+ */
+function mapChunk(
+  codes: string[],
+  rows: KisMultiPriceRow[],
+  quotes: Quote[],
+  failed: string[],
+): void {
+  codes.forEach((code, index) => {
+    const row = rows[index];
+
+    if (row === undefined) {
+      console.error('[kis] %s 시세 없음: 응답 행이 모자랍니다.', code);
+      failed.push(code);
+      return;
+    }
+
+    try {
+      quotes.push(toQuote(code, row));
+    } catch (error) {
+      console.error('[kis] %s 시세 조회 실패: %s', code, describe(error));
+      failed.push(code);
+    }
+  });
+}
+
+async function fetchChunk(
+  codes: string[],
   token: string,
   env: { KIS_BASE_URL: string; KIS_APP_KEY: string; KIS_APP_SECRET: string },
-): Promise<Quote> {
-  const url = new URL('/uapi/domestic-stock/v1/quotations/inquire-price', env.KIS_BASE_URL);
-  url.searchParams.set('FID_COND_MRKT_DIV_CODE', MARKET_DIV_CODE);
-  url.searchParams.set('FID_INPUT_ISCD', code);
+): Promise<KisMultiPriceRow[]> {
+  const url = new URL('/uapi/domestic-stock/v1/quotations/intstock-multprice', env.KIS_BASE_URL);
+  codes.forEach((code, index) => {
+    // 파라미터는 1부터 시작하는 번호쌍이다. 30번까지 있고 1번만 필수다.
+    url.searchParams.set(`FID_COND_MRKT_DIV_CODE_${index + 1}`, MARKET_DIV_CODE);
+    url.searchParams.set(`FID_INPUT_ISCD_${index + 1}`, code);
+  });
 
   let response: Response;
   try {
@@ -103,7 +159,7 @@ async function fetchOneQuote(
         appkey: env.KIS_APP_KEY,
         // 베어러 토큰이 있어도 appkey/appsecret을 매 호출마다 함께 보내야 한다.
         appsecret: env.KIS_APP_SECRET,
-        tr_id: TR_ID_INQUIRE_PRICE,
+        tr_id: TR_ID_MULTI_PRICE,
         // P: 개인·법인 고객. B(제휴사)일 때만 personalseckey가 추가로 필요하다.
         custtype: 'P',
         // 연속 조회용 필드. 첫 요청은 빈 문자열을 '보낸다' (생략이 아니다).
@@ -117,58 +173,56 @@ async function fetchOneQuote(
     throw new KisError('upstream', '시세 요청이 실패했습니다.', describe(error));
   }
 
-  if (!response.ok) {
-    throw new KisError('upstream', '시세 응답이 실패했습니다.', `HTTP ${response.status}`);
-  }
+  /*
+   * 상태 코드로 먼저 갈라지지 않는다. KIS는 HTTP 500으로 응답하면서 본문에 진짜 원인을
+   * 담아 보낸다(예: 500 + msg_cd EGW00121 '유효하지 않은 token'). 상태 코드만 보고
+   * upstream 오류로 뭉뚱그리면 유량 초과와 토큰 만료를 구분할 수 없고, 회복할 수 있는
+   * 실패를 종목별 '시세 없음'으로 조용히 묻어버리게 된다.
+   */
+  const body: unknown = await response.json().catch(() => null);
+  const parsed = multiPriceResponseSchema.safeParse(body);
 
-  const parsed = inquirePriceResponseSchema.safeParse(await response.json().catch(() => null));
   if (!parsed.success) {
-    throw new KisError('upstream', '시세 응답 형식이 예상과 다릅니다.');
+    throw new KisError(
+      'upstream',
+      '시세 응답 형식이 예상과 다릅니다.',
+      `HTTP ${response.status} ${JSON.stringify(body).slice(0, 200)}`,
+    );
   }
 
   // HTTP 200이어도 rt_cd가 '0'이 아니면 실패다. 이 구분을 놓치면 에러를 시세로 오해한다.
   if (parsed.data.rt_cd !== '0') {
-    const detail = `rt_cd=${parsed.data.rt_cd} msg_cd=${parsed.data.msg_cd ?? '-'} msg1=${parsed.data.msg1 ?? '-'}`;
+    const msgCd = parsed.data.msg_cd ?? '-';
+    const detail = `HTTP ${response.status} rt_cd=${parsed.data.rt_cd} msg_cd=${msgCd} msg1=${parsed.data.msg1 ?? '-'}`;
 
-    if (parsed.data.msg_cd === RATE_LIMIT_MSG_CD) {
+    if (msgCd === RATE_LIMIT_MSG_CD) {
       throw new KisError('rate-limit', 'KIS 유량 제한을 초과했습니다.', detail);
+    }
+    if (TOKEN_INVALID_MSG_CDS.includes(msgCd)) {
+      throw new KisError('token-invalid', 'KIS가 접근토큰을 거절했습니다.', detail);
     }
     throw new KisError('upstream', 'KIS가 시세 조회를 거절했습니다.', detail);
   }
 
-  if (parsed.data.output === undefined) {
-    throw new KisError('upstream', '시세 응답에 output이 없습니다.');
-  }
-
-  return toQuote(code, parsed.data.output);
+  return parsed.data.output ?? [];
 }
 
-/**
- * items를 최대 limit개씩 동시에 처리한다.
- *
- * 워커 limit개가 공용 커서에서 다음 항목을 하나씩 집어가는 방식이라, 항목별 소요 시간이
- * 달라도 놀고 있는 워커가 생기지 않는다. p-limit을 따로 들이지 않으려고 직접 둔다.
- * task가 던지면 전체가 거절된다 — 종목 단위로 삼킬 실패는 호출부가 이미 잡고 들어온다.
- */
-async function mapWithConcurrency<T>(
-  items: T[],
-  limit: number,
-  task: (item: T) => Promise<void>,
-): Promise<void> {
-  let cursor = 0;
-
-  const worker = async () => {
-    while (cursor < items.length) {
-      const item = items[cursor];
-      cursor += 1;
-      await task(item);
-    }
-  };
-
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+/** KIS가 한 번에 처리하는 종목 수를 넘기면 조용히 잘라내므로 우리가 먼저 나눈다. */
+function chunk<T>(items: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < items.length; i += size) result.push(items.slice(i, i + size));
+  return result;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** 로그용 요약. KisError의 detail(원문 msg_cd/msg1)까지 남겨야 진단이 된다. */
 function describe(error: unknown): string {
+  if (error instanceof KisError) {
+    return `${error.message}${error.detail === undefined ? '' : ` (${error.detail})`}`;
+  }
   if (error instanceof Error) return `${error.name}: ${error.message}`;
   return String(error);
 }

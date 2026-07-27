@@ -6,10 +6,11 @@ import type { QuoteErrorCode, QuotesErrorBody } from '../quote-contract';
  *
  * - config: 환경변수 누락·오류
  * - auth: 접근토큰 발급 실패
+ * - token-invalid: 들고 있던 토큰이 거절됨 (EGW00121/EGW00123). 재발급 후 한 번 재시도할 신호다
  * - rate-limit: KIS 유량 제한 초과 (EGW00201)
  * - upstream: 그 밖의 KIS 응답 실패, 타임아웃, 네트워크 오류
  */
-export type KisErrorKind = 'config' | 'auth' | 'rate-limit' | 'upstream';
+export type KisErrorKind = 'config' | 'auth' | 'token-invalid' | 'rate-limit' | 'upstream';
 
 /**
  * KIS 호출 실패.
@@ -29,17 +30,24 @@ export class KisError extends Error {
   }
 }
 
-const RESPONSE_BY_KIND: Record<KisErrorKind, { status: number; code: QuoteErrorCode; message: string }> =
-  {
-    config: { status: 503, code: 'UPSTREAM_AUTH', message: '시세 서버 인증에 실패했습니다.' },
-    auth: { status: 503, code: 'UPSTREAM_AUTH', message: '시세 서버 인증에 실패했습니다.' },
-    'rate-limit': {
-      status: 429,
-      code: 'RATE_LIMITED',
-      message: '시세 요청이 몰렸습니다. 잠시 후 다시 시도해주세요.',
-    },
-    upstream: { status: 502, code: 'UPSTREAM_ERROR', message: '시세를 불러오지 못했습니다.' },
-  };
+const RESPONSE_BY_KIND: Record<
+  KisErrorKind,
+  { status: number; code: QuoteErrorCode; message: string }
+> = {
+  config: { status: 503, code: 'UPSTREAM_AUTH', message: '시세 서버 인증에 실패했습니다.' },
+  auth: { status: 503, code: 'UPSTREAM_AUTH', message: '시세 서버 인증에 실패했습니다.' },
+  'token-invalid': {
+    status: 503,
+    code: 'UPSTREAM_AUTH',
+    message: '시세 서버 인증에 실패했습니다.',
+  },
+  'rate-limit': {
+    status: 429,
+    code: 'RATE_LIMITED',
+    message: '시세 요청이 몰렸습니다. 잠시 후 다시 시도해주세요.',
+  },
+  upstream: { status: 502, code: 'UPSTREAM_ERROR', message: '시세를 불러오지 못했습니다.' },
+};
 
 /**
  * 어떤 실패든 사용자에게 보여줄 수 있는 형태로 정규화한다.

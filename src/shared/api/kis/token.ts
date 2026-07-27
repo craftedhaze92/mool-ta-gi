@@ -122,6 +122,18 @@ function describe(error: unknown): string {
   return String(error);
 }
 
+/**
+ * 캐시된 토큰을 버린다.
+ *
+ * 만료 시각만 믿을 수 없어서 필요하다. KIS는 토큰을 새로 발급하면 앞서 발급된 토큰을
+ * 무효화하므로, 다른 프로세스(로컬 스크립트, 다른 배포 인스턴스)가 한 번만 발급해도
+ * 우리 캐시가 조용히 죽는다. 그때 KIS는 EGW00121을 돌려준다. 이 함수를 부르고 다시
+ * 받아오면 회복된다.
+ */
+export function invalidateToken(): void {
+  cached = null;
+}
+
 /** 테스트 전용. 모듈 스코프 캐시를 비운다. */
 export function __resetTokenCache(): void {
   cached = null;
