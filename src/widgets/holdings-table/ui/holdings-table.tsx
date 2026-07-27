@@ -94,7 +94,6 @@ function HoldingRow({ holding, selected }: { holding: Holding; selected: boolean
   );
 }
 
-/** 종목이 하나도 없을 때. 시안에 정의가 없어 새로 만든 화면이다. */
 function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-2 px-4 py-14 text-center md:px-6">

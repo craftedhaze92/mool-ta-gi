@@ -1,0 +1,174 @@
+import 'server-only';
+import { getServerEnv } from '@/shared/config/env';
+import type { Quote } from '../quote-contract';
+import { KisError } from './errors';
+import { toQuote } from './mapper';
+import { inquirePriceResponseSchema, RATE_LIMIT_MSG_CD } from './raw-types';
+import { getAccessToken } from './token';
+
+/**
+ * 국내주식 현재가 조회.
+ *
+ * KIS에는 관심종목 멀티시세(intstock-multprice, tr_id FHKST11300006, 최대 30종목)라는
+ * 배치 API도 있다. 요청 수는 유리하지만 배치 하나가 실패하면 30종목이 통째로 날아가
+ * '개별 종목 실패가 전체를 실패시키지 않는다'는 요구와 어긋난다. 그래서 단건 API를
+ * 동시성 제한과 함께 쓴다.
+ *
+ * TODO: 종목 수가 수십 개로 늘어 요청 수가 문제가 되면 배치 API 도입을 재검토한다.
+ *       응답 키가 완전히 다르므로(inter2_prpr 등) 매퍼를 하나 더 만들어야 한다.
+ */
+
+const TR_ID_INQUIRE_PRICE = 'FHKST01010100';
+/** J: KRX 주식·ETF·ETN */
+const MARKET_DIV_CODE = 'J';
+const QUOTE_TIMEOUT_MS = 5000;
+
+/**
+ * 동시 호출 수.
+ *
+ * 실전 계정의 유량 제한은 초당 약 20건이다(공식 샘플의 호출 간 sleep 0.05초).
+ * 5로 두면 순간 부하가 한도의 1/4이고, 상한인 50종목도 최악 10라운드면 끝난다.
+ * p-limit을 새로 들이는 대신 아래 15줄짜리 구현으로 해결한다.
+ */
+const CONCURRENCY = 5;
+
+/**
+ * 실제 브라우저 User-Agent.
+ * KIS는 기본 라이브러리 UA(python-requests 등)에 이상 응답을 주는 사례가 보고돼 있어
+ * 공식 샘플도 실제 UA를 명시하도록 안내한다.
+ */
+const USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
+export interface FetchQuotesResult {
+  quotes: Quote[];
+  /** 조회에 실패한 종목코드 */
+  failed: string[];
+}
+
+/**
+ * 종목코드 배열의 시세를 가져온다.
+ *
+ * 토큰은 종목 수와 무관하게 한 번만 얻는다. 개별 종목의 실패는 failed에 모으고 나머지는
+ * 그대로 돌려준다 — 한 종목이 상장폐지·거래정지여도 포트폴리오 전체가 빈 화면이 되면 안 된다.
+ *
+ * 반대로 토큰 발급 실패나 유량 제한은 종목별로 회복할 수 없는 문제라 그대로 throw한다.
+ */
+export async function fetchQuotes(codes: string[]): Promise<FetchQuotesResult> {
+  if (codes.length === 0) return { quotes: [], failed: [] };
+
+  const token = await getAccessToken();
+  const env = getServerEnv();
+
+  const quotes: Quote[] = [];
+  const failed: string[] = [];
+
+  await mapWithConcurrency(codes, CONCURRENCY, async (code) => {
+    try {
+      quotes.push(await fetchOneQuote(code, token, env));
+    } catch (error) {
+      // 유량 제한은 다른 종목도 똑같이 겪는다. 종목 단위로 삼키지 않고 위로 올린다.
+      if (error instanceof KisError && error.kind === 'rate-limit') throw error;
+
+      console.error('[kis] %s 시세 조회 실패: %s', code, describe(error));
+      failed.push(code);
+    }
+  });
+
+  // 입력 순서를 잃지 않게 정렬해서 돌려준다 (동시 실행이라 완료 순서는 뒤섞인다).
+  const order = new Map(codes.map((code, index) => [code, index]));
+  quotes.sort((a, b) => (order.get(a.code) ?? 0) - (order.get(b.code) ?? 0));
+  failed.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
+
+  return { quotes, failed };
+}
+
+async function fetchOneQuote(
+  code: string,
+  token: string,
+  env: { KIS_BASE_URL: string; KIS_APP_KEY: string; KIS_APP_SECRET: string },
+): Promise<Quote> {
+  const url = new URL('/uapi/domestic-stock/v1/quotations/inquire-price', env.KIS_BASE_URL);
+  url.searchParams.set('FID_COND_MRKT_DIV_CODE', MARKET_DIV_CODE);
+  url.searchParams.set('FID_INPUT_ISCD', code);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        'content-type': 'application/json',
+        // KIS 공식 샘플이 application/json이 아니라 text/plain을 보낸다. 그대로 따른다.
+        accept: 'text/plain',
+        authorization: `Bearer ${token}`,
+        appkey: env.KIS_APP_KEY,
+        // 베어러 토큰이 있어도 appkey/appsecret을 매 호출마다 함께 보내야 한다.
+        appsecret: env.KIS_APP_SECRET,
+        tr_id: TR_ID_INQUIRE_PRICE,
+        // P: 개인·법인 고객. B(제휴사)일 때만 personalseckey가 추가로 필요하다.
+        custtype: 'P',
+        // 연속 조회용 필드. 첫 요청은 빈 문자열을 '보낸다' (생략이 아니다).
+        tr_cont: '',
+        'user-agent': USER_AGENT,
+      },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(QUOTE_TIMEOUT_MS),
+    });
+  } catch (error) {
+    throw new KisError('upstream', '시세 요청이 실패했습니다.', describe(error));
+  }
+
+  if (!response.ok) {
+    throw new KisError('upstream', '시세 응답이 실패했습니다.', `HTTP ${response.status}`);
+  }
+
+  const parsed = inquirePriceResponseSchema.safeParse(await response.json().catch(() => null));
+  if (!parsed.success) {
+    throw new KisError('upstream', '시세 응답 형식이 예상과 다릅니다.');
+  }
+
+  // HTTP 200이어도 rt_cd가 '0'이 아니면 실패다. 이 구분을 놓치면 에러를 시세로 오해한다.
+  if (parsed.data.rt_cd !== '0') {
+    const detail = `rt_cd=${parsed.data.rt_cd} msg_cd=${parsed.data.msg_cd ?? '-'} msg1=${parsed.data.msg1 ?? '-'}`;
+
+    if (parsed.data.msg_cd === RATE_LIMIT_MSG_CD) {
+      throw new KisError('rate-limit', 'KIS 유량 제한을 초과했습니다.', detail);
+    }
+    throw new KisError('upstream', 'KIS가 시세 조회를 거절했습니다.', detail);
+  }
+
+  if (parsed.data.output === undefined) {
+    throw new KisError('upstream', '시세 응답에 output이 없습니다.');
+  }
+
+  return toQuote(code, parsed.data.output);
+}
+
+/**
+ * items를 최대 limit개씩 동시에 처리한다.
+ *
+ * 워커 limit개가 공용 커서에서 다음 항목을 하나씩 집어가는 방식이라, 항목별 소요 시간이
+ * 달라도 놀고 있는 워커가 생기지 않는다. p-limit을 따로 들이지 않으려고 직접 둔다.
+ * task가 던지면 전체가 거절된다 — 종목 단위로 삼킬 실패는 호출부가 이미 잡고 들어온다.
+ */
+async function mapWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  task: (item: T) => Promise<void>,
+): Promise<void> {
+  let cursor = 0;
+
+  const worker = async () => {
+    while (cursor < items.length) {
+      const item = items[cursor];
+      cursor += 1;
+      await task(item);
+    }
+  };
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
+function describe(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return String(error);
+}
