@@ -10,13 +10,13 @@
 
 ## 구성
 
-| 파일           | 역할                                          |
-| -------------- | --------------------------------------------- |
-| `token.ts`     | 접근토큰 발급·캐싱                            |
+| 파일           | 역할                                                |
+| -------------- | --------------------------------------------------- |
+| `token.ts`     | 접근토큰 발급·캐싱                                  |
 | `quotes.ts`    | 시세 조회, 청크 분할·간격 제어, 종목 단위 실패 격리 |
-| `mapper.ts`    | KIS 문자열 응답 → `Quote` 정규화 (순수)       |
-| `raw-types.ts` | KIS 원문 스키마 (zod)                         |
-| `errors.ts`    | `KisError` + 사용자 응답으로의 정규화         |
+| `mapper.ts`    | KIS 문자열 응답 → `Quote` 정규화 (순수)             |
+| `raw-types.ts` | KIS 원문 스키마 (zod)                               |
+| `errors.ts`    | `KisError` + 사용자 응답으로의 정규화               |
 
 응답 계약(`Quote`, `parseCodesParam` 등)은 이 디렉터리가 아니라 `../quote-contract.ts`에 있다.
 `app` 레이어는 FSD 규칙상 `entities`를 import할 수 없어서 계약이 `shared`에 있어야 하고,
