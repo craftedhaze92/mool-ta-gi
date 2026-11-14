@@ -99,6 +99,13 @@ function rowOf(name: string) {
   return row!;
 }
 
+/** 종목명 콤보박스를 열고 검색해 목록에서 고른다. 목록 항목 이름은 '종목명 (코드, 시장)'이다. */
+async function pickStock(user: ReturnType<typeof userEvent.setup>, keyword: string, name: string) {
+  await user.click(screen.getByRole('combobox', { name: '종목명' }));
+  await user.type(screen.getByRole('combobox', { name: '종목 검색어' }), keyword);
+  await user.click(await screen.findByRole('option', { name: new RegExp(`^${name} \\(`) }));
+}
+
 describe('DashboardPage', () => {
   /*
    * 스켈레톤은 SSR HTML 그 자체다. persist가 skipHydration이라 서버는 항상 게이트가 닫힌
@@ -166,8 +173,10 @@ describe('DashboardPage', () => {
 
     await user.click(screen.getByRole('button', { name: '＋ 종목 추가' }));
 
-    await user.type(screen.getByPlaceholderText('예: 삼성전자'), '카카오');
-    await user.type(screen.getByPlaceholderText('예: 005930'), '035720');
+    await pickStock(user, '카카오', '카카오');
+    // 종목을 고르면 종목코드가 따라 채워진다
+    expect(screen.getByPlaceholderText('자동 입력')).toHaveValue('035720');
+
     await user.type(screen.getByPlaceholderText('주'), '90');
     await user.type(screen.getByPlaceholderText('원'), '58200');
 
@@ -185,7 +194,7 @@ describe('DashboardPage', () => {
     await user.click(screen.getByRole('button', { name: '＋ 종목 추가' }));
     await user.click(screen.getByRole('button', { name: '저장' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('종목명을 입력해주세요.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('종목을 검색해 선택해주세요.');
     expect(useHoldingsStore.getState().holdings).toHaveLength(4);
   });
 
@@ -195,8 +204,7 @@ describe('DashboardPage', () => {
 
     await user.click(screen.getByRole('button', { name: '＋ 종목 추가' }));
 
-    await user.type(screen.getByPlaceholderText('예: 삼성전자'), '삼성전자');
-    await user.type(screen.getByPlaceholderText('예: 005930'), '005930');
+    await pickStock(user, '삼성', '삼성전자');
     await user.type(screen.getByPlaceholderText('주'), '30');
     await user.type(screen.getByPlaceholderText('원'), '71200');
 
@@ -210,6 +218,39 @@ describe('DashboardPage', () => {
     const holdings = useHoldingsStore.getState().holdings;
     expect(holdings).toHaveLength(4); // 행이 늘지 않는다
     expect(holdings[0]).toMatchObject({ quantity: 150, avgPrice: 76_960 });
+  });
+
+  it('수정 다이얼로그에서 다른 종목을 고르면 종목명과 코드가 함께 바뀌고 저장 후 반영된다', async () => {
+    const user = userEvent.setup();
+    await renderDashboard();
+
+    await user.click(screen.getByRole('button', { name: 'NAVER 더보기' }));
+    await user.click(await screen.findByRole('menuitem', { name: '종목 수정' }));
+
+    // 수정 폼은 기존 종목으로 채워져 열린다
+    expect(screen.getByRole('combobox', { name: '종목명' })).toHaveTextContent('NAVER');
+    expect(screen.getByPlaceholderText('자동 입력')).toHaveValue('035420');
+
+    await pickStock(user, '카카오', '카카오');
+
+    expect(screen.getByRole('combobox', { name: '종목명' })).toHaveTextContent('카카오');
+    expect(screen.getByPlaceholderText('자동 입력')).toHaveValue('035720');
+
+    await user.click(screen.getByRole('button', { name: '저장' }));
+
+    // 같은 행(id)이 바뀐다. 수량·평단가·섹터는 그대로다
+    const holdings = useHoldingsStore.getState().holdings;
+    expect(holdings).toHaveLength(4);
+    expect(holdings.find((h) => h.id === 'seed-035420')).toMatchObject({
+      name: '카카오',
+      code: '035720',
+      sector: '인터넷',
+      quantity: 30,
+      avgPrice: 215_000,
+    });
+
+    expect(within(rowOf('카카오')).getByText('30주')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'NAVER 더보기' })).not.toBeInTheDocument();
   });
 
   it('종목을 삭제하면 목록에서 사라진다', async () => {

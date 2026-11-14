@@ -17,8 +17,8 @@ const CODE_PATTERN = /^\d{6}$/;
  * 그래서 입력 타입(HoldingFormValues)과 출력 타입이 다르다.
  */
 export const holdingFormSchema = z.object({
-  name: z.string().trim().min(1, '종목명을 입력해주세요.'),
-  code: z.string().trim().regex(CODE_PATTERN, '종목코드 6자리를 입력해주세요.'),
+  name: z.string().trim().min(1, '종목을 검색해 선택해주세요.'),
+  code: z.string().trim().regex(CODE_PATTERN, '목록에서 종목을 선택해주세요.'),
   sector: z.enum(SECTORS),
   quantity: z.coerce.number(POSITIVE_MESSAGE).positive(POSITIVE_MESSAGE),
   avgPrice: z.coerce.number(POSITIVE_MESSAGE).positive(POSITIVE_MESSAGE),

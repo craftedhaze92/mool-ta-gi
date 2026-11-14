@@ -1,11 +1,13 @@
 'use client';
 
 import { Controller, type UseFormReturn } from 'react-hook-form';
+import type { Stock } from '@/shared/api/stock-search-contract';
 import { Input } from '@/shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { cn } from '@/shared/lib/utils';
 import type { HoldingFormValues } from '../model/holding-form-schema';
 import { SECTORS } from '../model/types';
+import { StockSearchCombobox } from './stock-search-combobox';
 
 /** 시안의 입력 필드 스펙: 14px, radius 10px, 헤어라인 테두리, 포커스 시 브랜드 컬러 */
 const FIELD =
@@ -21,24 +23,46 @@ const LABEL = 'text-muted-foreground flex flex-col gap-1.5 text-xs font-semibold
  * 다이얼로그 쪽에서 처리한다.
  */
 export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormValues> }) {
-  const { register, control } = form;
+  const { register, control, setValue, formState } = form;
+
+  /*
+   * 종목은 검색 목록에서만 고른다. 고르는 순간 종목명과 종목코드를 함께 채운다.
+   * 한 번 저장을 시도한 뒤라면 바로 다시 검증해, 남아 있던 '종목을 선택해주세요'를 지운다.
+   */
+  const selectStock = (stock: Stock) => {
+    const options = { shouldDirty: true, shouldValidate: formState.isSubmitted };
+    setValue('name', stock.name, options);
+    setValue('code', stock.code, options);
+  };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className={LABEL}>
-          종목명
-          <Input {...register('name')} placeholder="예: 삼성전자" className={FIELD} />
-        </label>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <div className={LABEL}>
+              <span id="holding-name-label">종목명</span>
+              <StockSearchCombobox
+                value={field.value}
+                onSelect={selectStock}
+                aria-labelledby="holding-name-label"
+                className={cn(FIELD, 'text-foreground font-normal')}
+              />
+            </div>
+          )}
+        />
 
+        {/* 종목코드는 종목을 고르면 따라 채워진다. 직접 고치면 이름과 어긋날 수 있어 읽기 전용이다 */}
         <label className={LABEL}>
           종목코드
           <Input
             {...register('code')}
-            placeholder="예: 005930"
-            inputMode="numeric"
-            maxLength={6}
-            className={FIELD}
+            readOnly
+            tabIndex={-1}
+            placeholder="자동 입력"
+            className={cn(FIELD, 'bg-subtle text-muted-strong cursor-default tabular-nums')}
           />
         </label>
       </div>
