@@ -10,8 +10,8 @@ interface GapGaugeProps {
 
 /** 세 가격을 0~100 스케일 위에 배치한다. 양끝에 4% 여백을 둬서 마커가 잘리지 않게 한다. */
 function toPositions({ currentPrice, avgPrice, newAvgPrice }: GapGaugeProps) {
-  const low = Math.min(currentPrice, avgPrice) * 0.96;
-  const high = Math.max(currentPrice, avgPrice) * 1.04;
+  const low = Math.min(currentPrice, avgPrice, newAvgPrice) * 0.96;
+  const high = Math.max(currentPrice, avgPrice, newAvgPrice) * 1.04;
   const span = high - low;
 
   const at = (price: number) =>
