@@ -21,17 +21,26 @@ function SummaryCard({ label, value, sub, tone, pending = false }: SummaryCardPr
   const toneClass = tone === 'up' ? 'text-up' : tone === 'down' ? 'text-down' : undefined;
 
   return (
-    <div className="bg-card flex flex-col gap-1.5 rounded-2xl px-4 py-4 tabular-nums lg:gap-2 lg:px-[22px] lg:py-5">
+    <div className="bg-card @container flex flex-col gap-1.5 rounded-2xl px-4 py-4 tabular-nums lg:gap-2 lg:px-[22px] lg:py-5">
       <span className="text-muted-foreground text-xs font-medium lg:text-[13px]">{label}</span>
       {/*
-       * 카드가 가장 좁아지는 건 4칸이 되는 lg 직후다. 거기서 ₩24,414,000이 카드를 넘지 않는
-       * 크기가 상한이고, nowrap이 있어야 부호(−)가 숫자와 따로 떨어지지 않는다.
+       * 금액은 한 줄을 지켜야 한다. nowrap이 없으면 부호(−)가 숫자와 따로 떨어진다.
+       *
+       * 대신 자릿수가 늘면 카드를 넘친다. 모바일 2칸(안쪽 폭 약 134px)에서는 −₩146,201,000이
+       * 24px 넘쳤다. 그래서 기본 크기(20/24px)를 상한으로 두고, 글자 수로 계산한 폭이 카드
+       * 안쪽 폭(100cqw)을 넘을 때만 글자를 줄인다. 굵은 tabular 숫자 한 글자는 약 0.61em이고,
+       * 여유를 두어 0.64em으로 계산한다. 줄 높이는 고정해 글자가 줄어도 카드 높이는 그대로다.
        */}
       <span
         className={cn(
-          'text-xl font-bold tracking-[-0.01em] whitespace-nowrap xl:text-2xl',
+          'font-bold tracking-[-0.01em] whitespace-nowrap',
+          '[--value-size:1.25rem] xl:[--value-size:1.5rem]',
+          'leading-7 xl:leading-8',
           toneClass,
         )}
+        style={{
+          fontSize: `min(var(--value-size), calc(100cqw / ${(value.length * 0.64).toFixed(2)}))`,
+        }}
       >
         <PendingValue pending={pending} className="h-7 w-32 xl:h-8">
           {value}
