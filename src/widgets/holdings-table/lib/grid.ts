@@ -18,3 +18,5 @@ export const CELL_RESET = 'md:col-auto md:row-auto';
 
 /** 행 공통 여백. 모바일에서는 카드처럼 보이도록 구분선을 둔다. */
 export const ROW_PADDING = 'border-b px-4 py-3 last:border-b-0 md:border-b-0 md:px-6 md:py-[13px]';
+/** 종목이 적어도 데스크톱 카드의 기본 높이를 유지한다. 모바일은 내용 높이를 따른다. */
+export const TABLE_CARD = 'bg-card rounded-2xl pt-2 pb-3 md:min-h-[360px]';

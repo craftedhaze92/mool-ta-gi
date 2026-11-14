@@ -15,7 +15,19 @@ import { formatPercent, formatQuantity, formatSignedWon, formatWon } from '@/sha
 import { cn } from '@/shared/lib/utils';
 import { Skeleton } from '@/shared/ui/skeleton';
 
-import { CELL_RESET, GRID, ROW_PADDING } from '../lib/grid';
+import { CELL_RESET, GRID, ROW_PADDING, TABLE_CARD } from '../lib/grid';
+import { useKeepRowVisible, useRowLimit, type RowLimit } from '../model/use-row-limit';
+
+/**
+ * 카드 안에 한 번에 보이는 행 수. 넘으면 카드 안에서 스크롤된다.
+ *
+ * 모바일은 3행이다. 카드 행 하나가 약 156px라 5행이면 화면을 거의 다 덮고, 페이지 스크롤
+ * 안에 표 스크롤이 겹쳐 손가락이 어느 쪽을 움직이는지 헷갈린다.
+ */
+const MAX_VISIBLE_ROWS: RowLimit = { mobile: 3, desktop: 5 };
+
+/** 스크롤 영역 안에서 종목 행을 고르는 선택자. 위에 고정된 헤더 행은 빠진다 */
+const HOLDING_ROW_SELECTOR = '[data-holding-row]';
 
 /**
  * 시세는 부모가 내려준다. 행마다 useHoldingQuotes를 부르면 시세가 갱신될 때마다 모든 행이
@@ -40,6 +52,7 @@ function HoldingRow({
   return (
     <motion.div
       role="row"
+      data-holding-row={holding.id}
       tabIndex={0}
       onClick={() => selectHolding(holding.id)}
       onKeyDown={(event) => {
@@ -164,8 +177,16 @@ export function HoldingsTable() {
   const { prices, status } = useHoldingQuotes();
   const isEmpty = holdings.length === 0;
 
+  const scrollRef = useRowLimit<HTMLDivElement>(
+    MAX_VISIBLE_ROWS,
+    holdings.length,
+    HOLDING_ROW_SELECTOR,
+  );
+  // id는 스토어가 발급한 UUID라 따옴표로 감싼 속성 선택자에 그대로 넣어도 안전하다
+  useKeepRowVisible(scrollRef, selectedId === null ? null : `[data-holding-row="${selectedId}"]`);
+
   return (
-    <section className="bg-card rounded-2xl pt-2 pb-3">
+    <section className={TABLE_CARD}>
       <div className="flex items-center justify-between px-4 pt-4 pb-3 md:px-6">
         <span className="flex items-baseline gap-3">
           <h2 className="text-base font-bold">보유 종목</h2>
@@ -182,13 +203,20 @@ export function HoldingsTable() {
       {isEmpty ? (
         <EmptyState />
       ) : (
-        <>
+        /*
+         * 행이 MAX_VISIBLE_ROWS(모바일 3 · 데스크톱 5)를 넘으면 이 영역 안에서 스크롤된다(높이는 useRowLimit이 잰다).
+         * 헤더 행을 영역 안에 두고 위에 고정하는 이유: 영역 밖에 두면 스크롤바가 생기는 순간
+         * 행만 그 폭만큼 좁아져 헤더와 열이 어긋난다.
+         * overscroll-contain: 표 끝까지 스크롤한 뒤 휠이 페이지로 넘어가 화면이 튀지 않게 한다.
+         */
+        <div ref={scrollRef} className="overflow-y-auto overscroll-contain">
           <div
             role="row"
+            data-sticky-header
             /* 모바일은 셀마다 라벨을 인라인으로 달아 헤더 행이 필요 없다 */
             className={cn(
               GRID,
-              'text-muted-foreground hidden border-b px-6 py-2 text-xs font-semibold md:grid',
+              'text-muted-foreground bg-card sticky top-0 z-10 hidden border-b px-6 py-2 text-xs font-semibold md:grid',
             )}
           >
             <span>종목명</span>
@@ -210,7 +238,7 @@ export function HoldingsTable() {
               />
             ))}
           </div>
-        </>
+        </div>
       )}
     </section>
   );

@@ -1,6 +1,6 @@
 import { Skeleton } from '@/shared/ui/skeleton';
 import { cn } from '@/shared/lib/utils';
-import { CELL_RESET, GRID, ROW_PADDING } from '../lib/grid';
+import { CELL_RESET, GRID, ROW_PADDING, TABLE_CARD } from '../lib/grid';
 
 /** seed 종목 수와 맞춘다. 복원 후 행이 늘거나 줄어드는 폭을 최소로 두기 위해서다. */
 const ROW_COUNT = 4;
@@ -55,7 +55,7 @@ function RowSkeleton() {
 
 export function HoldingsTableSkeleton() {
   return (
-    <section className="bg-card rounded-2xl pt-2 pb-3">
+    <section className={TABLE_CARD}>
       {/* 섹션 헤더: 제목 자리 + 종목 추가 버튼 자리 */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 md:px-6">
         <Skeleton className="h-5 w-24" />
