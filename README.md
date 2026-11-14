@@ -86,17 +86,19 @@ app → views → widgets → features → entities → shared
 
 시세 관련 코드가 이 구조에 놓인 자리:
 
-| 위치                             | 역할                                             |
-| -------------------------------- | ------------------------------------------------ |
-| `shared/api/kis/`                | KIS 어댑터 (서버 전용). 간격 제어·토큰 캐시 포함 |
-| `shared/api/quote-contract.ts`   | `/api/quotes` 계약 (서버·클라이언트 공유)        |
-| `shared/api/indices-contract.ts` | `/api/indices` 계약 + 조회 대상 지수 목록        |
-| `shared/api/polling.ts`          | 장 시간에 맞춘 폴링·재시도 정책 (시세·지수 공용) |
-| `shared/lib/market-hours.ts`     | KST 장 운영시간 판정 (순수 함수)                 |
-| `entities/quote`                 | `Quote` 타입 + `useQuotes` 훅                    |
-| `entities/market-index`          | `MarketIndex` 타입 + `useMarketIndices` 훅       |
-| `entities/holding`               | 보유 종목 + 파생 계산 (시세를 인자로 받는다)     |
-| `features/holding-quotes`        | 보유 종목 × 시세 조합                            |
+| 위치                             | 역할                                                        |
+| -------------------------------- | ----------------------------------------------------------- |
+| `shared/api/kis/`                | KIS 어댑터 (서버 전용). 간격 제어·토큰 캐시 포함            |
+| `shared/api/quote-contract.ts`   | `/api/quotes` 계약 (서버·클라이언트 공유)                   |
+| `shared/api/indices-contract.ts` | `/api/indices` 계약 + 조회 대상 지수 목록                   |
+| `shared/api/polling.ts`          | 장 시간에 맞춘 폴링·재시도 정책 (시세·지수 공용)            |
+| `shared/api/stock-master/`       | 종목 마스터 + 검색 (서버 전용). `pnpm stocks:update`로 갱신 |
+| `shared/api/use-stock-search.ts` | `/api/stocks` 종목 검색 훅 (종목 추가 폼에서 사용)          |
+| `shared/lib/market-hours.ts`     | KST 장 운영시간 판정 (순수 함수)                            |
+| `entities/quote`                 | `Quote` 타입 + `useQuotes` 훅                               |
+| `entities/market-index`          | `MarketIndex` 타입 + `useMarketIndices` 훅                  |
+| `entities/holding`               | 보유 종목 + 파생 계산 (시세를 인자로 받는다)                |
+| `features/holding-quotes`        | 보유 종목 × 시세 조합                                       |
 
 **두 엔티티는 서로를 import하지 않는다.** FSD가 동일 레이어 슬라이스 간 import를 금지하기
 때문이다. `entities/holding`이 `PriceSnapshot { current, prevClose }`라는 구조적 타입을 선언하고,
