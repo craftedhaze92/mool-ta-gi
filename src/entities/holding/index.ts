@@ -7,6 +7,9 @@ export type {
   PortfolioSummary,
   PriceMap,
   PriceSnapshot,
+  SimulationInput,
+  SimulationResult,
+  SimulationScenario,
 } from './model/types';
 
 export {
@@ -28,3 +31,5 @@ export type { MergePreview } from './model/use-holding-form';
 export { useHoldingForm } from './model/use-holding-form';
 
 export { HoldingFormDialog } from './ui/holding-form-dialog';
+
+export { calcSimulation } from './model/simulation';

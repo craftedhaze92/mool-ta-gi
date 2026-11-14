@@ -105,7 +105,7 @@ export interface AllocationSlice {
   ratio: number;
 }
 
-/** 물타기 시뮬레이션 결과 */
+/** 물타기 시뮬레이션 결과 (현재가 고정, 슬라이더용) */
 export interface AveragingResult {
   /** 추가 매수 후 평단가 */
   newAvgPrice: number;
@@ -118,4 +118,63 @@ export interface AveragingResult {
   requiredAmount: number;
   /** 본전까지 필요한 상승률(%). 음수면 이미 수익권 */
   breakEvenRate: number;
+}
+
+/** 물타기 시뮬레이션 입력 */
+export interface SimulationInput {
+  /** 'quantity'면 amount가 추가 매수 수량(주), 'budget'이면 투입 예산(원)이다 */
+  mode: 'quantity' | 'budget';
+  /** 0 이상의 정수 */
+  amount: number;
+  /** 추가 매수 단가. 현재가일 수도, 사용자가 가정한 가격일 수도 있다. 1 이상의 정수 */
+  buyPrice: number;
+}
+
+/** 가정 주가 한 지점에서의 종목 손익 */
+export interface SimulationScenario {
+  /** 매수가 대비 변동률(%). −10 / 0 / +10 */
+  change: number;
+  /** 그 변동률을 적용한 가정 주가 (원 단위 반올림) */
+  price: number;
+  /** 추가 매수를 하지 않았을 때의 종목 손익 */
+  beforeProfit: number;
+  /** 추가 매수를 했을 때의 종목 손익 */
+  afterProfit: number;
+}
+
+/** 물타기 시뮬레이션 결과 (수량·예산, 가정 매수가) */
+export interface SimulationResult {
+  /** 실제로 사는 수량. 예산 모드에서는 예산 ÷ 매수가를 내림한 값이다 */
+  quantity: number;
+  /** quantity × 매수가 */
+  requiredAmount: number;
+  /** 예산 모드에서 사고 남는 돈. 수량 모드에서는 null */
+  remainingBudget: number | null;
+  /** 매수 전 종목 투입금 (보유수량 × 평단가) */
+  beforeCost: number;
+  /** 매수 후 종목 투입금 */
+  afterCost: number;
+  /** 매수 후 보유 수량 */
+  totalQuantity: number;
+  /**
+   * 매수 후 평단가. 반올림하지 않는다 — 손익을 이 값이 아니라 투입금으로 계산하므로
+   * 표시할 때만 원 단위로 반올림한다.
+   */
+  newAvgPrice: number;
+  /**
+   * 평단가 변화율(%). 음수면 평단이 내려간 것(물타기 성공),
+   * 양수면 매수가가 평단보다 높아 오히려 평단이 올라간 경우다.
+   */
+  avgChangeRate: number;
+  /** 매수 전 전체 투입금 (모든 보유 종목) */
+  portfolioCost: number;
+  /** 매수 후 전체 투입금. 추가 자금은 외부에서 들어온다고 본다 */
+  portfolioAfterCost: number;
+  /**
+   * 포트폴리오 평가금액 대비 종목 비중(%). 매수 전후 모두 현재 시세로 평가한다.
+   * 시세가 하나라도 없으면 전체를 알 수 없으므로 null이다.
+   */
+  allocation: { before: number; after: number } | null;
+  /** 매수가 대비 −10% / 0% / +10%에서의 손익 비교 */
+  scenarios: SimulationScenario[];
 }
