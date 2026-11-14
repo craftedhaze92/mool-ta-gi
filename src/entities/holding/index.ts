@@ -1,6 +1,5 @@
 export type {
   AllocationSlice,
-  AveragingResult,
   Holding,
   HoldingInput,
   HoldingMetrics,
@@ -13,7 +12,6 @@ export type {
 } from './model/types';
 
 export {
-  calcAveraging,
   calcCostBasis,
   calcHoldingAllocation,
   calcHoldingMetrics,

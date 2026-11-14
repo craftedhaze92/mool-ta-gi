@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  calcAveraging,
   calcCostBasis,
   calcHoldingAllocation,
   calcHoldingMetrics,
@@ -172,70 +171,46 @@ describe('calcHoldingAllocation', () => {
   });
 });
 
-describe('calcAveraging', () => {
-  it('추가 매수 후 평단가가 내려간다', () => {
-    const r = calcAveraging(samsung, priceOf(samsung), 30);
-
-    // (120×78,400 + 30×71,200) / 150 = 76,960
-    expect(r.newAvgPrice).toBeCloseTo(76_960, 6);
-    expect(r.requiredAmount).toBe(2_136_000);
-    expect(r.avgChangeRate).toBeCloseTo(-1.8367, 3);
-    expect(r.breakEvenRate).toBeCloseTo(8.0899, 3);
-  });
-
-  it('추가 수량이 0이면 평단가가 그대로다', () => {
-    const r = calcAveraging(samsung, priceOf(samsung), 0);
-
-    expect(r.newAvgPrice).toBe(samsung.avgPrice);
-    expect(r.requiredAmount).toBe(0);
-    expect(r.avgChangeRate).toBe(0);
-  });
-
-  it('현재가가 평단보다 높으면 평단이 오히려 올라간다', () => {
-    // 현대차: 평단 242,000 < 현재가 258,500
-    const hyundai = HOLDING_FIXTURES[3];
-    const r = calcAveraging(hyundai, priceOf(hyundai), 30);
-
-    expect(r.newAvgPrice).toBeGreaterThan(hyundai.avgPrice);
-    expect(r.avgChangeRate).toBeGreaterThan(0);
-  });
-
-  it('이미 수익권이면 손익분기 상승률이 음수다', () => {
-    const r = calcAveraging(hynix, priceOf(hynix), 10);
-    expect(r.breakEvenRate).toBeLessThan(0);
-  });
-
-  it('음수 수량은 0으로 취급한다', () => {
-    expect(calcAveraging(samsung, priceOf(samsung), -5).requiredAmount).toBe(0);
-  });
-});
-
 describe('calcQuantityForTargetAverage', () => {
-  const samsungPrice = priceOf(samsung);
+  const buyPrice = priceOf(samsung).current; // 71,200
+  const target = (targetAvg: number) =>
+    calcQuantityForTargetAverage(samsung, { buyPrice, targetAvg });
 
   it('목표 평단가에 필요한 수량을 역산한다', () => {
     // 120 × (78,400 − 76,000) / (76,000 − 71,200) = 60
-    expect(calcQuantityForTargetAverage(samsung, samsungPrice, 76_000)).toBe(60);
+    expect(target(76_000)).toBe(60);
   });
 
   it('결과를 올림해서 목표를 확실히 넘긴다', () => {
-    const qty = calcQuantityForTargetAverage(samsung, samsungPrice, 77_000);
+    const qty = target(77_000);
     expect(qty).not.toBeNull();
-    expect(calcAveraging(samsung, samsungPrice, qty!).newAvgPrice).toBeLessThanOrEqual(77_000);
+    expect(
+      calcWeightedAverage(samsung.quantity, samsung.avgPrice, qty!, buyPrice),
+    ).toBeLessThanOrEqual(77_000);
+  });
+
+  it('현재가가 아닌 가정 매수가로도 역산한다', () => {
+    // 120 × (78,400 − 76,000) / (76,000 − 70,000) = 48
+    expect(calcQuantityForTargetAverage(samsung, { buyPrice: 70_000, targetAvg: 76_000 })).toBe(48);
   });
 
   it('목표가가 현재 평단가 이상이면 도달 불가', () => {
-    expect(calcQuantityForTargetAverage(samsung, samsungPrice, 78_400)).toBeNull();
-    expect(calcQuantityForTargetAverage(samsung, samsungPrice, 80_000)).toBeNull();
+    expect(target(78_400)).toBeNull();
+    expect(target(80_000)).toBeNull();
   });
 
-  it('목표가가 현재가 이하면 도달 불가', () => {
-    expect(calcQuantityForTargetAverage(samsung, samsungPrice, 71_200)).toBeNull();
-    expect(calcQuantityForTargetAverage(samsung, samsungPrice, 60_000)).toBeNull();
+  it('목표가가 매수가 이하면 도달 불가', () => {
+    expect(target(71_200)).toBeNull();
+    expect(target(60_000)).toBeNull();
   });
 
   it('숫자가 아니면 null', () => {
-    expect(calcQuantityForTargetAverage(samsung, samsungPrice, Number.NaN)).toBeNull();
+    expect(target(Number.NaN)).toBeNull();
+  });
+
+  it('필요 수량이 안전한 정수 범위를 넘으면 null', () => {
+    // 목표가가 매수가에 바짝 붙으면 분모가 0에 가까워져 수량이 폭발한다
+    expect(target(71_200.000_000_01)).toBeNull();
   });
 });
 

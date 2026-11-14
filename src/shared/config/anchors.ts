@@ -9,6 +9,12 @@
 export const AVERAGING_PANEL_ID = 'averaging-panel';
 
 /**
+ * 추가 매수 상세 카드(widgets/simulation-detail). 데스크톱에서 시뮬레이터 패널이
+ * '전후 비교·손익 표는 여기 있다'고 안내하며 이리로 보낸다.
+ */
+export const AVERAGING_DETAIL_ID = 'averaging-detail';
+
+/**
  * 앵커로 부드럽게 스크롤한다. 이미 화면 안에 있으면 브라우저가 알아서 아무것도 하지 않으므로
  * 시뮬레이터가 항상 보이는 데스크톱(xl 이상)에서도 그대로 호출하면 된다.
  */

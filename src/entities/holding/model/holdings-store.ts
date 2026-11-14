@@ -9,8 +9,6 @@ import { MOCK_HOLDINGS } from './mock';
 import { UNKNOWN_SECTOR } from '@/shared/api/stock-search-contract';
 import type { Holding, HoldingInput } from './types';
 
-const DEFAULT_ADD_QUANTITY = 30;
-
 /** persist가 저장하는 부분. partialize와 짝을 이룬다. */
 interface PersistedHoldings {
   holdings: Holding[];
@@ -90,10 +88,6 @@ export const useHoldingsStore = create(
           holdings: MOCK_HOLDINGS,
           /** 시뮬레이터가 보고 있는 종목 id. 목록이 비면 null */
           selectedId: MOCK_HOLDINGS[0].id as string | null,
-          /** 추가 매수 수량 (슬라이더) */
-          addQuantity: DEFAULT_ADD_QUANTITY,
-          /** 목표 평단가 입력값. 빈 문자열이면 미입력 */
-          targetAvgInput: '',
         },
         (set) => ({
           /** 새 종목을 추가하고 그 종목을 선택한다. 발급된 id를 돌려준다. */
@@ -103,8 +97,6 @@ export const useHoldingsStore = create(
             set((state) => {
               state.holdings.push({ ...input, id });
               state.selectedId = id;
-              state.addQuantity = DEFAULT_ADD_QUANTITY;
-              state.targetAvgInput = '';
             });
 
             return id;
@@ -146,29 +138,18 @@ export const useHoldingsStore = create(
 
               state.holdings = state.holdings.filter((h) => h.id !== id);
 
-              if (nextSelectedId !== state.selectedId) {
-                state.selectedId = nextSelectedId;
-                state.addQuantity = DEFAULT_ADD_QUANTITY;
-                state.targetAvgInput = '';
-              }
+              state.selectedId = nextSelectedId;
             }),
 
-          /** 종목을 바꾼다. 수량과 목표 평단가 입력은 초기화한다. */
+          /**
+           * 시뮬레이터가 볼 종목을 바꾼다.
+           *
+           * 시뮬레이터 입력값(수량·예산·매수가)은 여기 없다. features/simulate-averaging이
+           * 종목별로 들고 있어, 종목이 바뀌면 그쪽이 기본값을 돌려준다. 여기서 초기화할 것이 없다.
+           */
           selectHolding: (id: string) =>
             set((state) => {
               state.selectedId = id;
-              state.addQuantity = DEFAULT_ADD_QUANTITY;
-              state.targetAvgInput = '';
-            }),
-
-          setAddQuantity: (quantity: number) =>
-            set((state) => {
-              state.addQuantity = quantity;
-            }),
-
-          setTargetAvgInput: (value: string) =>
-            set((state) => {
-              state.targetAvgInput = value;
             }),
 
           /**

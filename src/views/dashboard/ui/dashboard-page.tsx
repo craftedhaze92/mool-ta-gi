@@ -11,15 +11,28 @@ import { HoldingsTable, HoldingsTableSkeleton } from '@/widgets/holdings-table';
 import { MarketHeader } from '@/widgets/market-header';
 import { PortfolioSummary, PortfolioSummarySkeleton } from '@/widgets/portfolio-summary';
 import { SectorChart, SectorChartSkeleton } from '@/widgets/sector-chart';
+import { SimulationDetail, SimulationDetailSkeleton } from '@/widgets/simulation-detail';
 
 /**
- * 본문 3덩어리(테이블 / 시뮬레이터 / 차트)의 배치.
+ * 본문 4덩어리(테이블 / 시뮬레이터 / 추가 매수 상세 / 차트)의 배치.
  *
- * DOM 순서는 테이블 → 시뮬레이터 → 차트다. 모바일 스택 순서가 그대로 이 순서라야
- * 핵심 기능인 시뮬레이터가 차트 뒤로 밀리지 않는다. xl부터는 명시적 배치로
- * 시뮬레이터만 우측 열로 보내고 좌측 열에 테이블·차트를 세로로 쌓는다.
+ * DOM 순서는 테이블 → 시뮬레이터 → 상세 → 차트다. 모바일 스택 순서가 그대로 이 순서라야
+ * 핵심 기능인 시뮬레이터가 차트 뒤로 밀리지 않고, 상세가 시뮬레이터 바로 아래 붙는다.
+ * xl부터는 명시적 배치로 시뮬레이터만 우측 열로 보내고 좌측 열에 테이블 → 차트 → 상세를
+ * 세로로 쌓는다. 상세를 좌측 맨 아래에 두는 이유는 시뮬레이터가 좌측 열보다 길어 생기는
+ * 빈자리를 메우기 위해서다.
  */
-const BODY_GRID = 'flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_372px] xl:items-start';
+const BODY_GRID =
+  'flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_372px] xl:grid-rows-[min-content_min-content_1fr] xl:items-start';
+
+/** 좌측 열 각 칸의 xl 배치. 실제 화면과 스켈레톤이 공유한다 */
+const SLOT = {
+  table: 'xl:col-start-1 xl:row-start-1',
+  // self-stretch가 있어야 row-span 안에서 내부 aside의 sticky가 움직일 공간을 얻는다
+  panel: 'xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:self-stretch',
+  detail: 'xl:col-start-1 xl:row-start-3',
+  charts: 'grid gap-4 md:grid-cols-[1fr_1.2fr] xl:col-start-1 xl:row-start-2',
+};
 
 /**
  * localStorage 복원 전에 보여줄 자리.
@@ -46,15 +59,17 @@ function DashboardSkeleton() {
       <PortfolioSummarySkeleton />
 
       <div className={BODY_GRID}>
-        <div className="xl:col-start-1 xl:row-start-1">
+        <div className={SLOT.table}>
           <HoldingsTableSkeleton />
         </div>
 
-        <div className="xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:self-stretch">
+        <div className={SLOT.panel}>
           <AveragingPanelSkeleton />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1fr_1.2fr] xl:col-start-1 xl:row-start-2">
+        <SimulationDetailSkeleton className={SLOT.detail} />
+
+        <div className={SLOT.charts}>
           <SectorChartSkeleton />
           <HoldingAllocationSkeleton />
         </div>
@@ -112,16 +127,17 @@ export function DashboardPage() {
           <PortfolioSummary />
 
           <div className={BODY_GRID}>
-            <div className="xl:col-start-1 xl:row-start-1">
+            <div className={SLOT.table}>
               <HoldingsTable />
             </div>
 
-            {/* self-stretch가 있어야 row-span 안에서 내부 aside의 sticky가 움직일 공간을 얻는다 */}
-            <div className="xl:col-start-2 xl:row-span-2 xl:row-start-1 xl:self-stretch">
+            <div className={SLOT.panel}>
               <AveragingPanel />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-[1fr_1.2fr] xl:col-start-1 xl:row-start-2">
+            <SimulationDetail className={SLOT.detail} />
+
+            <div className={SLOT.charts}>
               <SectorChart />
               <HoldingAllocation />
             </div>

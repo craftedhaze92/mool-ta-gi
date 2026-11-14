@@ -19,8 +19,6 @@ beforeEach(() => {
   useHoldingsStore.setState({
     holdings: HOLDING_FIXTURES.map((h) => ({ ...h })),
     selectedId: HOLDING_FIXTURES[0].id,
-    addQuantity: 30,
-    targetAvgInput: '',
   });
 });
 
@@ -34,16 +32,6 @@ describe('addHolding', () => {
     expect(holdings).toHaveLength(5);
     expect(holdings[4]).toMatchObject({ id, name: '카카오', quantity: 90 });
     expect(state().selectedId).toBe(id);
-  });
-
-  it('선택을 바꾸면서 시뮬레이터 입력을 초기화한다', () => {
-    state().setAddQuantity(150);
-    state().setTargetAvgInput('70000');
-
-    state().addHolding(KAKAO);
-
-    expect(state().addQuantity).toBe(30);
-    expect(state().targetAvgInput).toBe('');
   });
 });
 

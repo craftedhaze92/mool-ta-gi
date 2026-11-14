@@ -12,12 +12,25 @@ function ResultRowSkeleton({ valueWidth }: { valueWidth: string }) {
   );
 }
 
+/** 라벨 + 입력칸. 입력칸 높이(42px)는 FORM_FIELD(py-2.5 + text-sm + 테두리)와 맞춘다 */
+function FieldSkeleton({ labelWidth }: { labelWidth: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Skeleton className={cn('h-3', labelWidth)} />
+      <Skeleton className="h-[42px] rounded-[10px]" />
+    </div>
+  );
+}
+
 /**
  * 시뮬레이터 로딩 자리.
  *
  * PANEL·PANEL_SPLIT을 실제 패널과 공유하는 게 핵심이다. md~xl 구간에서 패널이
  * 컨테이너 쿼리로 2단 분할되며 높이가 절반 가까이 줄어드는데, 예전처럼 높이를
  * 하드코딩하면 그 구간에서 하이드레이션 때 200px 넘게 튄다.
+ *
+ * 블록 순서와 간격은 averaging-panel.tsx의 SimulationInputs·SimulationResultView를 따른다.
+ * 그쪽 배치를 바꾸면 여기도 함께 바꾼다.
  */
 export function AveragingPanelSkeleton() {
   return (
@@ -40,37 +53,41 @@ export function AveragingPanelSkeleton() {
             ))}
           </div>
 
-          {/* 현재가·평단 갭 게이지. 라벨이 위아래로 붙어 실제 여백(mt-8 mb-7)을 흉내낸다 */}
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-3 w-24" />
-            <div className="mx-1.5 mt-8 mb-7">
-              <Skeleton className="h-1.5 rounded-[3px]" />
-            </div>
+          {/* 매수가 + 안내 한 줄 */}
+          <div className="flex flex-col gap-1.5">
+            <FieldSkeleton labelWidth="w-16" />
+            <Skeleton className="h-3 w-40" />
           </div>
 
-          {/* 추가 매수 슬라이더 */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-4 w-10" />
-            </div>
-            <Skeleton className="h-1.5 rounded-full" />
+          {/* 계산 기준 토글 */}
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-9 rounded-lg" />
+          </div>
+
+          <FieldSkeleton labelWidth="w-24" />
+
+          {/* 목표 평단가 역산 — 라벨 / 입력칸 / 안내문 */}
+          <div className="flex flex-col gap-1.5 border-t pt-4">
+            <FieldSkeleton labelWidth="w-32" />
+            <Skeleton className="h-3 w-full" />
           </div>
         </div>
 
         <div className={PANEL_RIGHT_COLUMN}>
           <div className="flex flex-col gap-2.5 border-t pt-4 @2xl:border-t-0 @2xl:pt-0">
-            <ResultRowSkeleton valueWidth="w-28" />
+            <ResultRowSkeleton valueWidth="w-12" />
             <ResultRowSkeleton valueWidth="w-24" />
-            <ResultRowSkeleton valueWidth="w-32" />
+            <ResultRowSkeleton valueWidth="w-28" />
+            <ResultRowSkeleton valueWidth="w-20" />
           </div>
 
-          {/* 목표 평단가 역산 — 라벨 / 입력칸 / 안내문 2줄 */}
+          {/* 현재가·평단 갭 게이지. 라벨이 위아래로 붙어 실제 여백(mt-8 mb-7)을 흉내낸다 */}
           <div className="flex flex-col gap-2 border-t pt-4">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-[42px] rounded-[10px]" />
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-2/3" />
+            <Skeleton className="h-3 w-24" />
+            <div className="mx-1.5 mt-8 mb-7">
+              <Skeleton className="h-1.5 rounded-[3px]" />
+            </div>
           </div>
         </div>
       </div>

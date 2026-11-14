@@ -105,21 +105,6 @@ export interface AllocationSlice {
   ratio: number;
 }
 
-/** 물타기 시뮬레이션 결과 (현재가 고정, 슬라이더용) */
-export interface AveragingResult {
-  /** 추가 매수 후 평단가 */
-  newAvgPrice: number;
-  /**
-   * 평단가 변화율(%). 음수면 평단이 내려간 것(물타기 성공),
-   * 양수면 현재가가 평단보다 높아 오히려 평단이 올라간 경우다.
-   */
-  avgChangeRate: number;
-  /** 추가 매수에 필요한 금액 */
-  requiredAmount: number;
-  /** 본전까지 필요한 상승률(%). 음수면 이미 수익권 */
-  breakEvenRate: number;
-}
-
 /** 물타기 시뮬레이션 입력 */
 export interface SimulationInput {
   /** 'quantity'면 amount가 추가 매수 수량(주), 'budget'이면 투입 예산(원)이다 */
@@ -142,7 +127,7 @@ export interface SimulationScenario {
   afterProfit: number;
 }
 
-/** 물타기 시뮬레이션 결과 (수량·예산, 가정 매수가) */
+/** 물타기 시뮬레이션 결과 */
 export interface SimulationResult {
   /** 실제로 사는 수량. 예산 모드에서는 예산 ÷ 매수가를 내림한 값이다 */
   quantity: number;

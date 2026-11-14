@@ -2,16 +2,11 @@
 
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { Stock } from '@/shared/api/stock-search-contract';
+import { FORM_FIELD as FIELD, FORM_LABEL as LABEL } from '@/shared/ui/form-field';
 import { Input } from '@/shared/ui/input';
 import { cn } from '@/shared/lib/utils';
 import type { HoldingFormValues } from '../model/holding-form-schema';
 import { StockSearchCombobox } from './stock-search-combobox';
-
-/** 시안의 입력 필드 스펙: 14px, radius 10px, 헤어라인 테두리, 포커스 시 브랜드 컬러 */
-const FIELD =
-  'border-hairline focus-visible:border-brand h-auto rounded-[10px] border px-3 py-2.5 text-sm focus-visible:ring-0';
-
-const LABEL = 'text-muted-foreground flex flex-col gap-1.5 text-xs font-semibold';
 
 /**
  * 종목 추가와 종목 수정이 공유하는 폼 필드 묶음.

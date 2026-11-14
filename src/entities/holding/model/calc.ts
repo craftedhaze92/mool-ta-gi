@@ -1,6 +1,5 @@
 import type {
   AllocationSlice,
-  AveragingResult,
   Holding,
   HoldingMetrics,
   PortfolioSummary,
@@ -181,44 +180,32 @@ export function calcWeightedAverage(
 }
 
 /**
- * 현재가에 addQuantity주를 추가 매수했을 때의 결과.
- * 평단 계산은 calcWeightedAverage에 위임한다.
- */
-export function calcAveraging(
-  holding: Holding,
-  price: PriceSnapshot,
-  addQuantity: number,
-): AveragingResult {
-  const add = Math.max(0, Math.round(addQuantity));
-
-  const newAvgPrice = calcWeightedAverage(holding.quantity, holding.avgPrice, add, price.current);
-
-  return {
-    newAvgPrice,
-    avgChangeRate: safeRate(newAvgPrice - holding.avgPrice, holding.avgPrice),
-    requiredAmount: add * price.current,
-    breakEvenRate: safeRate(newAvgPrice - price.current, price.current),
-  };
-}
-
-/**
- * 목표 평단가에 도달하기 위해 필요한 추가 매수 수량.
+ * 목표 평단가에 도달하기 위해 buyPrice에 추가 매수해야 하는 수량.
  *
- * 목표가가 현재 평단가 이상이거나 현재가 이하면 도달할 수 없으므로 null.
- * (현재가보다 낮은 평단은 아무리 사도 만들 수 없다)
+ *   qty = ceil(보유수량 × (평단 − 목표) / (목표 − 매수가))
+ *
+ * 매수가는 현재가일 수도, 시뮬레이터에서 가정한 가격일 수도 있다. 시세(PriceSnapshot)가
+ * 아니라 단가 하나만 필요하므로 그것만 받는다. 숫자 두 개를 나란히 받으면 순서가 뒤바뀌어도
+ * 타입이 잡지 못하므로 이름 붙은 객체로 받는다.
+ *
+ * 다음은 null이다.
+ * - 목표가가 현재 평단가 이상이거나 매수가 이하 (매수가보다 낮은 평단은 아무리 사도 만들 수 없다)
+ * - 필요한 수량이나 금액이 안전한 정수 범위를 넘는다 (목표가가 매수가에 바짝 붙은 경우)
  */
 export function calcQuantityForTargetAverage(
   holding: Holding,
-  price: PriceSnapshot,
-  targetAvg: number,
+  { buyPrice, targetAvg }: { buyPrice: number; targetAvg: number },
 ): number | null {
   if (!Number.isFinite(targetAvg)) return null;
   if (targetAvg >= holding.avgPrice) return null;
-  if (targetAvg <= price.current) return null;
+  if (targetAvg <= buyPrice) return null;
 
-  return Math.ceil(
-    (holding.quantity * (holding.avgPrice - targetAvg)) / (targetAvg - price.current),
+  const quantity = Math.ceil(
+    (holding.quantity * (holding.avgPrice - targetAvg)) / (targetAvg - buyPrice),
   );
+  if (!Number.isSafeInteger(quantity) || !Number.isSafeInteger(quantity * buyPrice)) return null;
+
+  return quantity;
 }
 
 /** 현재가와 평단가 사이의 괴리율(%). 음수면 손실 구간이다. */

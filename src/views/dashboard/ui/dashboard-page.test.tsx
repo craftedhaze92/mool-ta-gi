@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useHoldingsStore, type Holding } from '@/entities/holding';
+import { useSimulationInputsStore } from '@/features/simulate-averaging';
 import { quotesErrorHandler, quotesHandler, quotesPendingHandler } from '@/shared/api/mocks/quotes';
 import { server } from '@/shared/testing/msw-server';
 import { QueryTestProvider, renderWithQuery } from '@/shared/testing/render-with-query';
@@ -71,9 +72,9 @@ beforeEach(() => {
   useHoldingsStore.setState({
     holdings: FIXTURES.map((h) => ({ ...h })),
     selectedId: FIXTURES[0].id,
-    addQuantity: 30,
-    targetAvgInput: '',
   });
+  // 시뮬레이터 입력은 모듈 싱글턴 스토어라 테스트 사이에 남는다
+  useSimulationInputsStore.getState().reset();
 });
 
 /**
@@ -143,7 +144,7 @@ describe('DashboardPage', () => {
     await renderDashboardWithQuotes();
 
     expect(screen.getByText('₩23,653,500')).toBeInTheDocument(); // 총 평가금액
-    expect(screen.getByText('₩24,414,000')).toBeInTheDocument(); // 총 매입금액
+    expect(screen.getByText('총 매입금액').parentElement).toHaveTextContent('₩24,414,000'); // 요약 카드
   });
 
   it('보유 종목 4건을 모두 렌더한다', async () => {
@@ -164,7 +165,7 @@ describe('DashboardPage', () => {
 
     await user.click(rowOf('SK하이닉스'));
 
-    expect(within(panel).getByText('SK하이닉스')).toBeInTheDocument();
+    expect(within(screen.getByRole('complementary')).getByText('SK하이닉스')).toBeInTheDocument();
   });
 
   it('종목을 추가하면 테이블과 시뮬레이터에 반영된다', async () => {
@@ -269,6 +270,19 @@ describe('DashboardPage', () => {
     await renderDashboard();
 
     await waitFor(() => expect(useHoldingsStore.getState().holdings[0].sector).toBe('전기·전자'));
+  });
+
+  it('시뮬레이터에 넣은 수량이 추가 매수 상세 표에 반영된다', async () => {
+    const user = userEvent.setup();
+    await renderDashboardWithQuotes();
+
+    const quantity = screen.getByLabelText('추가 매수 수량 (주)');
+    await user.clear(quantity);
+    await user.type(quantity, '80');
+
+    // 삼성전자 120주 + 80주
+    const table = screen.getByRole('table', { name: '추가 매수 전후 비교' });
+    expect(within(table).getByText('200주')).toBeInTheDocument();
   });
 
   it('종목을 삭제하면 목록에서 사라진다', async () => {
