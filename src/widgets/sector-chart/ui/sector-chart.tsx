@@ -5,6 +5,8 @@ import { calcSectorAllocation, useHoldingsStore, type AllocationSlice } from '@/
 import { useHoldingQuotes } from '@/features/holding-quotes';
 import { formatPercent, formatWon } from '@/shared/lib/format-won';
 import { ChartTooltip } from '@/shared/ui/chart-tooltip';
+import { cn } from '@/shared/lib/utils';
+import { EMPTY_CARD, EMPTY_MESSAGE } from '@/shared/ui/chart-empty';
 import { Skeleton } from '@/shared/ui/skeleton';
 
 /**
@@ -100,13 +102,16 @@ export function SectorChart() {
   const data = slices.map((slice) => ({ ...slice, fill: colorOf(slice.key) }));
 
   return (
-    <section className="bg-card @container rounded-2xl px-4 py-4 md:px-6 md:py-5">
+    <section
+      className={cn(
+        'bg-card @container rounded-2xl px-4 py-4 md:px-6 md:py-5',
+        holdings.length === 0 && EMPTY_CARD,
+      )}
+    >
       <h2 className="mb-3.5 text-[15px] font-bold">섹터별 비중</h2>
 
       {holdings.length === 0 ? (
-        <p className="text-muted-foreground py-10 text-center text-[13px]">
-          종목을 추가하면 비중이 표시됩니다
-        </p>
+        <p className={EMPTY_MESSAGE}>종목을 추가하면 비중이 표시됩니다</p>
       ) : status === 'pending' ? (
         <ChartBodySkeleton />
       ) : slices.length === 0 ? (

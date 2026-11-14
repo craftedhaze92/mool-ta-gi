@@ -1,9 +1,10 @@
 'use client';
 
-import { useHoldingsHydrated } from '@/entities/holding';
+import { useHoldingsHydrated, useHoldingsStore } from '@/entities/holding';
 import { useHoldingQuotes } from '@/features/holding-quotes';
 import { useSyncHoldingSectors } from '@/features/sync-holding-sectors';
 import { useMarketOpen } from '@/shared/lib/use-market-open';
+import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { AveragingPanel, AveragingPanelSkeleton } from '@/widgets/averaging-panel';
 import { HoldingAllocation, HoldingAllocationSkeleton } from '@/widgets/holding-allocation';
@@ -32,6 +33,11 @@ const SLOT = {
   panel: 'xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:self-stretch',
   detail: 'xl:col-start-1 xl:row-start-3',
   charts: 'grid gap-4 md:grid-cols-[1fr_1.2fr] xl:col-start-1 xl:row-start-2',
+  /*
+   * 보유 종목이 없으면 상세 카드가 그려지지 않아 3행이 빈다. 그때는 차트가 2·3행을 함께
+   * 차지하고 늘어나, 차트 카드 하단이 우측 시뮬레이터 하단과 맞는다.
+   */
+  chartsFill: 'xl:row-span-2 xl:self-stretch',
 };
 
 /**
@@ -110,6 +116,7 @@ export function DashboardPage() {
   const marketOpen = useMarketOpen();
   // 저장된 섹터를 KRX 업종에 맞춘다. 화면을 막지 않는 보정 작업이다
   useSyncHoldingSectors();
+  const isEmpty = useHoldingsStore((state) => state.holdings.length === 0);
 
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 pb-8 sm:px-6 xl:gap-5 xl:px-10 xl:pb-10">
@@ -137,7 +144,7 @@ export function DashboardPage() {
 
             <SimulationDetail className={SLOT.detail} />
 
-            <div className={SLOT.charts}>
+            <div className={cn(SLOT.charts, isEmpty && SLOT.chartsFill)}>
               <SectorChart />
               <HoldingAllocation />
             </div>

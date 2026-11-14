@@ -5,6 +5,8 @@ import { calcHoldingAllocation, useHoldingsStore } from '@/entities/holding';
 import { useHoldingQuotes } from '@/features/holding-quotes';
 import { formatPercent, formatWon } from '@/shared/lib/format-won';
 import { ChartTooltip } from '@/shared/ui/chart-tooltip';
+import { cn } from '@/shared/lib/utils';
+import { EMPTY_CARD, EMPTY_MESSAGE } from '@/shared/ui/chart-empty';
 import { Skeleton } from '@/shared/ui/skeleton';
 
 /**
@@ -51,9 +53,9 @@ function BarsSkeleton() {
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, empty = false }: { children: React.ReactNode; empty?: boolean }) {
   return (
-    <section className="bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5">
+    <section className={cn('bg-card rounded-2xl px-4 py-4 md:px-6 md:py-5', empty && EMPTY_CARD)}>
       <h2 className="mb-4 text-[15px] font-bold">종목별 비중</h2>
       {children}
     </section>
@@ -68,10 +70,8 @@ export function HoldingAllocation() {
 
   if (holdings.length === 0) {
     return (
-      <Shell>
-        <p className="text-muted-foreground py-10 text-center text-[13px]">
-          종목을 추가하면 비중이 표시됩니다
-        </p>
+      <Shell empty>
+        <p className={EMPTY_MESSAGE}>종목을 추가하면 비중이 표시됩니다</p>
       </Shell>
     );
   }
