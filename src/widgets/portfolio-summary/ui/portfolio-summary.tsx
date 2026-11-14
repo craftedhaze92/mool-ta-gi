@@ -61,16 +61,16 @@ export function PortfolioSummary() {
   const summary = calcPortfolioSummary(holdings, prices);
 
   const isEmpty = holdings.length === 0;
-  const pending = status === 'pending';
+  // 종목이 없으면 기다릴 시세도 없다. 빈 화면에 스켈레톤이 뜨지 않게 막는다
+  const pending = status === 'pending' && !isEmpty;
   /*
-   * 시세를 한 종목도 못 받았으면 평가 관련 값은 아예 그리지 않는다. 그 상태의 합계는
-   * 전부 0인데, ₩0은 '평가금액이 0원'과 구분되지 않아 오해를 부른다.
+   * 종목이 없으면 0이 실제 값이라 ₩0·0.00%로 보여준다.
+   * 반대로 종목은 있는데 시세를 한 종목도 못 받았으면 평가 관련 값은 '—'로 둔다. 그 상태의
+   * 합계도 0이지만, ₩0은 '평가금액이 0원'과 구분되지 않아 오해를 부른다.
    */
-  const hasValue = summary.pricedCount > 0;
+  const hasValue = isEmpty || summary.pricedCount > 0;
 
-  // 종목이 없으면 손익률은 계산할 대상이 없다. 0.00%보다 '—'가 정직하다.
-  const rate = (value: number) =>
-    isEmpty || !hasValue ? '—' : formatPercent(value, { signed: true });
+  const rate = (value: number) => (hasValue ? formatPercent(value, { signed: true }) : '—');
   const amount = (value: number, format: (v: number) => string) => (hasValue ? format(value) : '—');
 
   return (
