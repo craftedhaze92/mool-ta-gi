@@ -127,7 +127,7 @@ describe('calcSectorAllocation', () => {
   it('섹터별로 묶고 비중 내림차순으로 정렬한다', () => {
     const slices = calcSectorAllocation(HOLDING_FIXTURES, PRICE_FIXTURES);
 
-    expect(slices.map((s) => s.label)).toEqual(['반도체', '인터넷', '자동차']);
+    expect(slices.map((s) => s.label)).toEqual(['전기·전자', 'IT 서비스', '운송장비·부품']);
     expect(slices[0].value).toBe(8_544_000 + 4_987_500);
     expect(slices[0].ratio).toBeCloseTo(57.21, 1);
   });
@@ -144,8 +144,8 @@ describe('calcSectorAllocation', () => {
     const partial = { ...PRICE_FIXTURES, '005930': undefined };
     const slices = calcSectorAllocation(HOLDING_FIXTURES, partial);
 
-    // 반도체에는 SK하이닉스만 남는다
-    expect(slices.find((s) => s.label === '반도체')?.value).toBe(4_987_500);
+    // 전기·전자에는 SK하이닉스만 남는다
+    expect(slices.find((s) => s.label === '전기·전자')?.value).toBe(4_987_500);
     expect(slices.reduce((sum, s) => sum + s.ratio, 0)).toBeCloseTo(100, 6);
   });
 

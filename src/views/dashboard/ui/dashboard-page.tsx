@@ -2,6 +2,7 @@
 
 import { useHoldingsHydrated } from '@/entities/holding';
 import { useHoldingQuotes } from '@/features/holding-quotes';
+import { useSyncHoldingSectors } from '@/features/sync-holding-sectors';
 import { useMarketOpen } from '@/shared/lib/use-market-open';
 import { Button } from '@/shared/ui/button';
 import { AveragingPanel, AveragingPanelSkeleton } from '@/widgets/averaging-panel';
@@ -92,6 +93,8 @@ export function DashboardPage() {
    */
   const { status, fetchedAt, refetch } = useHoldingQuotes();
   const marketOpen = useMarketOpen();
+  // 저장된 섹터를 KRX 업종에 맞춘다. 화면을 막지 않는 보정 작업이다
+  useSyncHoldingSectors();
 
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 pb-8 sm:px-6 xl:gap-5 xl:px-10 xl:pb-10">

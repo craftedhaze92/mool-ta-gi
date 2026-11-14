@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ const FIXTURES: Holding[] = [
     id: 'seed-005930',
     code: '005930',
     name: '삼성전자',
-    sector: '반도체',
+    sector: '전기·전자',
     quantity: 120,
     avgPrice: 78_400,
   },
@@ -28,7 +28,7 @@ const FIXTURES: Holding[] = [
     id: 'seed-000660',
     code: '000660',
     name: 'SK하이닉스',
-    sector: '반도체',
+    sector: '전기·전자',
     quantity: 25,
     avgPrice: 168_000,
   },
@@ -36,7 +36,7 @@ const FIXTURES: Holding[] = [
     id: 'seed-035420',
     code: '035420',
     name: 'NAVER',
-    sector: '인터넷',
+    sector: 'IT 서비스',
     quantity: 30,
     avgPrice: 215_000,
   },
@@ -44,7 +44,7 @@ const FIXTURES: Holding[] = [
     id: 'seed-005380',
     code: '005380',
     name: '현대차',
-    sector: '자동차',
+    sector: '운송장비·부품',
     quantity: 18,
     avgPrice: 242_000,
   },
@@ -174,8 +174,9 @@ describe('DashboardPage', () => {
     await user.click(screen.getByRole('button', { name: '＋ 종목 추가' }));
 
     await pickStock(user, '카카오', '카카오');
-    // 종목을 고르면 종목코드가 따라 채워진다
-    expect(screen.getByPlaceholderText('자동 입력')).toHaveValue('035720');
+    // 종목을 고르면 종목코드와 섹터(KRX 업종)가 따라 채워진다
+    expect(screen.getByLabelText('종목코드')).toHaveValue('035720');
+    expect(screen.getByLabelText('섹터')).toHaveValue('IT 서비스');
 
     await user.type(screen.getByPlaceholderText('주'), '90');
     await user.type(screen.getByPlaceholderText('원'), '58200');
@@ -220,7 +221,7 @@ describe('DashboardPage', () => {
     expect(holdings[0]).toMatchObject({ quantity: 150, avgPrice: 76_960 });
   });
 
-  it('수정 다이얼로그에서 다른 종목을 고르면 종목명과 코드가 함께 바뀌고 저장 후 반영된다', async () => {
+  it('수정 다이얼로그에서 다른 종목을 고르면 종목명·코드·섹터가 함께 바뀌고 저장 후 반영된다', async () => {
     const user = userEvent.setup();
     await renderDashboard();
 
@@ -229,28 +230,45 @@ describe('DashboardPage', () => {
 
     // 수정 폼은 기존 종목으로 채워져 열린다
     expect(screen.getByRole('combobox', { name: '종목명' })).toHaveTextContent('NAVER');
-    expect(screen.getByPlaceholderText('자동 입력')).toHaveValue('035420');
+    expect(screen.getByLabelText('종목코드')).toHaveValue('035420');
+    expect(screen.getByLabelText('섹터')).toHaveValue('IT 서비스');
 
-    await pickStock(user, '카카오', '카카오');
+    // 업종이 다른 종목으로 바꿔 섹터도 따라 바뀌는지 본다
+    await pickStock(user, '카카오', '카카오뱅크');
 
-    expect(screen.getByRole('combobox', { name: '종목명' })).toHaveTextContent('카카오');
-    expect(screen.getByPlaceholderText('자동 입력')).toHaveValue('035720');
+    expect(screen.getByRole('combobox', { name: '종목명' })).toHaveTextContent('카카오뱅크');
+    expect(screen.getByLabelText('종목코드')).toHaveValue('323410');
+    expect(screen.getByLabelText('섹터')).toHaveValue('금융');
 
     await user.click(screen.getByRole('button', { name: '저장' }));
 
-    // 같은 행(id)이 바뀐다. 수량·평단가·섹터는 그대로다
+    // 같은 행(id)이 바뀐다. 수량·평단가는 그대로다
     const holdings = useHoldingsStore.getState().holdings;
     expect(holdings).toHaveLength(4);
     expect(holdings.find((h) => h.id === 'seed-035420')).toMatchObject({
-      name: '카카오',
-      code: '035720',
-      sector: '인터넷',
+      name: '카카오뱅크',
+      code: '323410',
+      sector: '금융',
       quantity: 30,
       avgPrice: 215_000,
     });
 
-    expect(within(rowOf('카카오')).getByText('30주')).toBeInTheDocument();
+    expect(within(rowOf('카카오뱅크')).getByText('30주')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'NAVER 더보기' })).not.toBeInTheDocument();
+  });
+
+  /*
+   * 섹터를 직접 고르던 시절에 저장된 값('반도체' 같은 테마 분류)은 화면이 뜬 뒤
+   * 종목 마스터의 KRX 업종으로 맞춰진다.
+   */
+  it('저장된 옛 섹터를 종목 마스터의 업종으로 맞춘다', async () => {
+    useHoldingsStore.setState({
+      holdings: FIXTURES.map((h) => ({ ...h, sector: h.code === '005930' ? '반도체' : h.sector })),
+    });
+
+    await renderDashboard();
+
+    await waitFor(() => expect(useHoldingsStore.getState().holdings[0].sector).toBe('전기·전자'));
   });
 
   it('종목을 삭제하면 목록에서 사라진다', async () => {

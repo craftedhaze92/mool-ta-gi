@@ -1,38 +1,39 @@
 'use client';
 
 import { Pie, PieChart, ResponsiveContainer, Tooltip, type TooltipContentProps } from 'recharts';
-import {
-  calcSectorAllocation,
-  SECTORS,
-  useHoldingsStore,
-  type AllocationSlice,
-  type Sector,
-} from '@/entities/holding';
+import { calcSectorAllocation, useHoldingsStore, type AllocationSlice } from '@/entities/holding';
 import { useHoldingQuotes } from '@/features/holding-quotes';
 import { formatPercent, formatWon } from '@/shared/lib/format-won';
 import { ChartTooltip } from '@/shared/ui/chart-tooltip';
 import { Skeleton } from '@/shared/ui/skeleton';
 
 /**
- * 섹터별 고정 색상. app/globals.css의 --color-sector-* 와 같은 값이다
+ * 섹터 팔레트. app/globals.css의 --color-sector-1..7 과 같은 값이다
  * (recharts와 인라인 style은 CSS 변수를 그대로 못 받아 여기 미러링한다).
- *
- * 슬라이스 인덱스가 아니라 **섹터 이름**으로 색을 잡는다. 슬라이스는 비중 내림차순으로
- * 정렬되므로 인덱스로 칠하면 주가가 변해 순위가 바뀔 때 섹터끼리 색을 주고받는다.
+ * 마지막 색(보라)은 '기타' 전용이다.
  */
-const SECTOR_COLORS: Record<Sector, string> = {
-  반도체: '#2a78d6',
-  인터넷: '#eb6834',
-  자동차: '#1baf7a',
-  금융: '#eda100',
-  바이오: '#e87ba4',
-  '2차전지': '#008300',
-  기타: '#4a3aa7',
-};
+const PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300'];
+const UNKNOWN_SECTOR_COLOR = '#4a3aa7';
+const UNKNOWN_SECTOR = '기타';
 
-/** SECTORS에 없는 섹터가 저장돼 있어도 화면이 깨지지 않게 한다. */
-function colorOf(sector: string): string {
-  return SECTOR_COLORS[sector as Sector] ?? SECTOR_COLORS[SECTORS[SECTORS.length - 1]];
+/**
+ * 섹터 → 색.
+ *
+ * 섹터는 KRX 업종(28종)이라 이름마다 색을 미리 정해 둘 수 없다. 대신 지금 보유한 섹터를
+ * **이름순**으로 세워 팔레트를 차례로 준다. 비중 순위가 아니라 이름으로 정하는 게 핵심이다 —
+ * 슬라이스는 비중 내림차순이라 순위로 칠하면 주가가 변할 때마다 섹터끼리 색을 주고받는다.
+ * 섹터를 새로 사거나 다 팔아 목록이 바뀔 때만 색이 다시 배정된다.
+ *
+ * '기타'는 이름순과 무관하게 항상 같은 색이다. 섹터가 팔레트(6색)보다 많으면 색이 반복된다.
+ */
+function buildSectorColors(sectors: readonly string[]): Map<string, string> {
+  const named = [...new Set(sectors)]
+    .filter((sector) => sector !== UNKNOWN_SECTOR)
+    .sort((a, b) => a.localeCompare(b, 'ko'));
+
+  const colors = new Map(named.map((sector, i) => [sector, PALETTE[i % PALETTE.length]]));
+  colors.set(UNKNOWN_SECTOR, UNKNOWN_SECTOR_COLOR);
+  return colors;
 }
 
 /**
@@ -44,14 +45,15 @@ function colorOf(sector: string): string {
 function SectorTooltip({ active, payload }: TooltipContentProps) {
   if (!active || payload.length === 0) return null;
 
-  const slice = payload[0].payload as AllocationSlice;
+  // 색은 데이터에 fill로 실려 온다 (아래 SectorChart 참고)
+  const slice = payload[0].payload as AllocationSlice & { fill: string };
 
   return (
     <ChartTooltip
       label={slice.label}
       value={formatWon(slice.value)}
       sub={formatPercent(slice.ratio, { digits: 1 })}
-      swatch={colorOf(slice.key)}
+      swatch={slice.fill}
     />
   );
 }
@@ -87,6 +89,8 @@ export function SectorChart() {
   const holdings = useHoldingsStore((state) => state.holdings);
   const { prices, status } = useHoldingQuotes();
   const slices = calcSectorAllocation(holdings, prices);
+  const colors = buildSectorColors(slices.map((slice) => slice.key));
+  const colorOf = (sector: string) => colors.get(sector) ?? UNKNOWN_SECTOR_COLOR;
 
   /*
    * 조각 색은 데이터에 fill로 실어 보낸다. recharts는 데이터 객체를 sector props로
@@ -112,7 +116,7 @@ export function SectorChart() {
         </p>
       ) : (
         /*
-         * 도넛(164) + 간격(22) 옆에 "반도체 57.2%" 한 줄이 들어가려면 카드 안쪽으로 300px이 필요하다.
+         * 도넛(164) + 간격(22) 옆에 "전기·전자 57.2%" 한 줄이 들어가려면 카드 안쪽으로 300px이 필요하다.
          * 이 카드는 1440에서도 380px밖에 안 되므로 기준을 @sm(384)로 잡으면 데스크톱에서도 쌓인다.
          */
         <div className="flex flex-col items-center gap-4 @min-[300px]:flex-row @min-[300px]:gap-[22px]">

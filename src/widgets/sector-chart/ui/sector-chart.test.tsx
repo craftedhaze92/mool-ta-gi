@@ -25,13 +25,14 @@ function swatchColorOf(sectorLabel: string): string {
   return (swatch as HTMLElement).style.backgroundColor;
 }
 
-const BLUE = 'rgb(42, 120, 214)'; // #2a78d6 — 반도체
-const YELLOW = 'rgb(237, 161, 0)'; // #eda100 — 금융
+const BLUE = 'rgb(42, 120, 214)'; // #2a78d6 — 팔레트 1번
+const ORANGE = 'rgb(235, 104, 52)'; // #eb6834 — 팔레트 2번
+const VIOLET = 'rgb(74, 58, 167)'; // #4a3aa7 — '기타' 전용
 
 /** 시세가 도착해 범례가 그려질 때까지 기다린다. 그 전에는 스켈레톤이다. */
 async function renderChart() {
   renderWithQuery(<SectorChart />);
-  await screen.findByText('반도체');
+  await screen.findByText('전기·전자');
 }
 
 beforeEach(() => {
@@ -39,45 +40,61 @@ beforeEach(() => {
 });
 
 describe('SectorChart 색상 배정', () => {
-  it('섹터 색은 비중 순위가 아니라 섹터 이름을 따른다', async () => {
-    // 금융이 1위, 반도체가 2위 — 순위 순서와 팔레트 슬롯 순서가 어긋나는 배치
+  /*
+   * 색은 보유 섹터의 이름순(금융 < 전기·전자)으로 정해진다. 아래 배치는 비중 1위가 전기·전자라
+   * 순위로 칠했다면 전기·전자가 파랑을 가져갔을 것이다.
+   */
+  it('섹터 색은 비중 순위가 아니라 섹터 이름순을 따른다', async () => {
     useHoldingsStore.setState({
       holdings: [
-        holding({ id: 'a', code: '000001', sector: '반도체', quantity: 10 }),
-        holding({ id: 'b', code: '000002', sector: '금융', quantity: 90 }),
+        holding({ id: 'a', code: '000001', sector: '전기·전자', quantity: 90 }),
+        holding({ id: 'b', code: '000002', sector: '금융', quantity: 10 }),
       ],
     });
 
     await renderChart();
 
-    // 인덱스로 칠했다면 1위인 금융이 슬롯1(파랑)을 가져갔을 것이다
-    expect(swatchColorOf('금융')).toBe(YELLOW);
-    expect(swatchColorOf('반도체')).toBe(BLUE);
+    expect(swatchColorOf('금융')).toBe(BLUE);
+    expect(swatchColorOf('전기·전자')).toBe(ORANGE);
   });
 
   it('비중이 뒤집혀도 각 섹터의 색이 그대로다', async () => {
-    const initial = [
-      holding({ id: 'a', code: '000001', sector: '반도체', quantity: 90 }),
-      holding({ id: 'b', code: '000002', sector: '금융', quantity: 10 }),
-    ];
-
-    useHoldingsStore.setState({ holdings: initial });
+    useHoldingsStore.setState({
+      holdings: [
+        holding({ id: 'a', code: '000001', sector: '전기·전자', quantity: 90 }),
+        holding({ id: 'b', code: '000002', sector: '금융', quantity: 10 }),
+      ],
+    });
     const { unmount } = renderWithQuery(<SectorChart />);
-    await screen.findByText('반도체');
-    expect(swatchColorOf('반도체')).toBe(BLUE);
-    expect(swatchColorOf('금융')).toBe(YELLOW);
+    await screen.findByText('전기·전자');
+    expect(swatchColorOf('금융')).toBe(BLUE);
+    expect(swatchColorOf('전기·전자')).toBe(ORANGE);
     unmount();
 
     // 주가가 움직여 순위가 뒤바뀐 상황
     useHoldingsStore.setState({
       holdings: [
-        holding({ id: 'a', code: '000001', sector: '반도체', quantity: 10 }),
+        holding({ id: 'a', code: '000001', sector: '전기·전자', quantity: 10 }),
         holding({ id: 'b', code: '000002', sector: '금융', quantity: 90 }),
       ],
     });
     await renderChart();
 
-    expect(swatchColorOf('반도체')).toBe(BLUE);
-    expect(swatchColorOf('금융')).toBe(YELLOW);
+    expect(swatchColorOf('금융')).toBe(BLUE);
+    expect(swatchColorOf('전기·전자')).toBe(ORANGE);
+  });
+
+  it("'기타'는 이름순과 무관하게 전용 색이다", async () => {
+    useHoldingsStore.setState({
+      holdings: [
+        holding({ id: 'a', code: '000001', sector: '전기·전자', quantity: 10 }),
+        holding({ id: 'b', code: '000002', sector: '기타', quantity: 10 }),
+      ],
+    });
+
+    await renderChart();
+
+    expect(swatchColorOf('전기·전자')).toBe(BLUE);
+    expect(swatchColorOf('기타')).toBe(VIOLET);
   });
 });

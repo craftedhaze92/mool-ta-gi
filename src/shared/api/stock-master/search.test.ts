@@ -3,12 +3,12 @@ import type { Stock } from '../stock-search-contract';
 import { createStockIndex } from './search';
 
 const STOCKS: Stock[] = [
-  { code: '000810', name: '삼성화재', market: 'KOSPI' },
-  { code: '005930', name: '삼성전자', market: 'KOSPI' },
-  { code: '005935', name: '삼성전자우', market: 'KOSPI' },
-  { code: '009150', name: '삼성전기', market: 'KOSPI' },
-  { code: '000660', name: 'SK하이닉스', market: 'KOSPI' },
-  { code: '123456', name: '한국삼성테크', market: 'KOSDAQ' },
+  { code: '000810', name: '삼성화재', market: 'KOSPI', sector: '보험' },
+  { code: '005930', name: '삼성전자', market: 'KOSPI', sector: '전기·전자' },
+  { code: '005935', name: '삼성전자우', market: 'KOSPI', sector: '전기·전자' },
+  { code: '009150', name: '삼성전기', market: 'KOSPI', sector: '전기·전자' },
+  { code: '000660', name: 'SK하이닉스', market: 'KOSPI', sector: '전기·전자' },
+  { code: '123456', name: '한국삼성테크', market: 'KOSDAQ', sector: '기타' },
 ];
 
 const names = (stocks: Stock[]) => stocks.map((s) => s.name);
@@ -42,5 +42,12 @@ describe('createStockIndex', () => {
 
   it('결과 수를 limit으로 자른다', () => {
     expect(index.search('삼성', 2)).toHaveLength(2);
+  });
+
+  it('종목코드로 찾고, 마스터에 없는 코드는 뺀다', () => {
+    expect(names(index.findByCodes(['005930', '999999', '000660']))).toEqual([
+      '삼성전자',
+      'SK하이닉스',
+    ]);
   });
 });

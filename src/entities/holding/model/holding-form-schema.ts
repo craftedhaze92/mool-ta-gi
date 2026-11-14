@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SECTORS, type Holding, type HoldingInput } from './types';
+import type { Holding, HoldingInput } from './types';
 
 /** 수량·평단가는 같은 규칙을 쓰므로 메시지도 하나로 묶는다. */
 const POSITIVE_MESSAGE = '수량과 평단가는 0보다 큰 숫자여야 합니다.';
@@ -19,7 +19,8 @@ const CODE_PATTERN = /^\d{6}$/;
 export const holdingFormSchema = z.object({
   name: z.string().trim().min(1, '종목을 검색해 선택해주세요.'),
   code: z.string().trim().regex(CODE_PATTERN, '목록에서 종목을 선택해주세요.'),
-  sector: z.enum(SECTORS),
+  // 종목을 고르면 함께 채워진다. 비어 있다면 종목을 고르지 않은 것이다
+  sector: z.string().trim().min(1, '목록에서 종목을 선택해주세요.'),
   quantity: z.coerce.number(POSITIVE_MESSAGE).positive(POSITIVE_MESSAGE),
   avgPrice: z.coerce.number(POSITIVE_MESSAGE).positive(POSITIVE_MESSAGE),
 });
@@ -31,7 +32,7 @@ export type HoldingFormValues = z.input<typeof holdingFormSchema>;
 export const EMPTY_HOLDING_FORM: HoldingFormValues = {
   name: '',
   code: '',
-  sector: '기타',
+  sector: '',
   quantity: '',
   avgPrice: '',
 };

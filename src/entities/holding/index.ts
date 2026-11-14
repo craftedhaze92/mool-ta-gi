@@ -7,10 +7,7 @@ export type {
   PortfolioSummary,
   PriceMap,
   PriceSnapshot,
-  Sector,
 } from './model/types';
-
-export { SECTORS } from './model/types';
 
 export {
   calcAveraging,

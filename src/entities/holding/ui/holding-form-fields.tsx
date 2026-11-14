@@ -3,10 +3,8 @@
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import type { Stock } from '@/shared/api/stock-search-contract';
 import { Input } from '@/shared/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { cn } from '@/shared/lib/utils';
 import type { HoldingFormValues } from '../model/holding-form-schema';
-import { SECTORS } from '../model/types';
 import { StockSearchCombobox } from './stock-search-combobox';
 
 /** 시안의 입력 필드 스펙: 14px, radius 10px, 헤어라인 테두리, 포커스 시 브랜드 컬러 */
@@ -33,7 +31,11 @@ export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormVal
     const options = { shouldDirty: true, shouldValidate: formState.isSubmitted };
     setValue('name', stock.name, options);
     setValue('code', stock.code, options);
+    setValue('sector', stock.sector, options);
   };
+
+  /** 종목을 따라 채워지는 칸. 직접 고치면 종목과 어긋날 수 있어 읽기 전용이다 */
+  const DERIVED = cn(FIELD, 'bg-subtle text-muted-strong cursor-default');
 
   return (
     <div className="flex flex-col gap-3">
@@ -54,7 +56,7 @@ export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormVal
           )}
         />
 
-        {/* 종목코드는 종목을 고르면 따라 채워진다. 직접 고치면 이름과 어긋날 수 있어 읽기 전용이다 */}
+        {/* 종목코드는 종목을 고르면 따라 채워진다 */}
         <label className={LABEL}>
           종목코드
           <Input
@@ -62,35 +64,22 @@ export function HoldingFormFields({ form }: { form: UseFormReturn<HoldingFormVal
             readOnly
             tabIndex={-1}
             placeholder="자동 입력"
-            className={cn(FIELD, 'bg-subtle text-muted-strong cursor-default tabular-nums')}
+            className={cn(DERIVED, 'tabular-nums')}
           />
         </label>
       </div>
 
-      <Controller
-        control={control}
-        name="sector"
-        render={({ field }) => (
-          <div className={LABEL}>
-            <span id="holding-sector-label">섹터</span>
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger
-                aria-labelledby="holding-sector-label"
-                className={cn(FIELD, 'text-foreground w-full font-normal')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SECTORS.map((sector) => (
-                  <SelectItem key={sector} value={sector}>
-                    {sector}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      />
+      {/* 섹터는 KRX 업종이다. 종목 마스터에서 종목과 함께 따라온다 */}
+      <label className={LABEL}>
+        섹터
+        <Input
+          {...register('sector')}
+          readOnly
+          tabIndex={-1}
+          placeholder="자동 입력"
+          className={DERIVED}
+        />
+      </label>
 
       {/* 현재가 입력은 없다. 시세는 종목코드로 서버에서 가져온다 */}
       <div className="grid grid-cols-2 gap-3">

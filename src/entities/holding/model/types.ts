@@ -1,8 +1,3 @@
-/** 선택 가능한 섹터. 폼 select의 옵션이자 섹터 비중 집계의 분류축이다. */
-export const SECTORS = ['반도체', '인터넷', '자동차', '금융', '바이오', '2차전지', '기타'] as const;
-
-export type Sector = (typeof SECTORS)[number];
-
 /**
  * 보유 종목 한 건. 모든 금액 단위는 원(KRW).
  *
@@ -21,8 +16,14 @@ export interface Holding {
   /** 6자리 종목 코드. 예: '005930'. 시세 조회 키라서 필수다 */
   code: string;
   name: string;
-  /** 섹터명. 섹터 비중 집계 기준이다. */
-  sector: Sector;
+  /**
+   * KRX 업종명. 예: '전기·전자', '금융', 'ETF'. 섹터 비중 집계 기준이다.
+   *
+   * 사용자가 고르지 않는다. 종목을 검색해 고를 때 종목 마스터에서 따라오고, 마스터가
+   * 갱신되면 섹터 동기화(features/sync-holding-sectors)가 저장값을 맞춰 준다.
+   * 업종이 정해지지 않은 종목은 '기타'다.
+   */
+  sector: string;
   quantity: number;
   /** 평균 매입 단가 */
   avgPrice: number;

@@ -37,7 +37,12 @@ describe('StockSearchCombobox', () => {
     ]);
 
     await user.click(options[1]);
-    expect(onSelect).toHaveBeenCalledWith({ code: '323410', name: '카카오뱅크', market: 'KOSPI' });
+    expect(onSelect).toHaveBeenCalledWith({
+      code: '323410',
+      name: '카카오뱅크',
+      market: 'KOSPI',
+      sector: '금융',
+    });
     // 고르면 목록이 닫힌다
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
@@ -88,7 +93,12 @@ describe('StockSearchCombobox', () => {
       await user.keyboard('{Enter}');
 
       expect(onSelect).toHaveBeenCalledTimes(1);
-      expect(onSelect).toHaveBeenCalledWith({ code: '035720', name: '카카오', market: 'KOSPI' });
+      expect(onSelect).toHaveBeenCalledWith({
+        code: '035720',
+        name: '카카오',
+        market: 'KOSPI',
+        sector: 'IT 서비스',
+      });
     });
 
     it('응답이 늦는 동안 이전 결과를 클릭해도 선택되지 않는다', async () => {
@@ -129,7 +139,12 @@ describe('StockSearchCombobox', () => {
       release();
 
       await user.click(await option('카카오'));
-      expect(onSelect).toHaveBeenCalledWith({ code: '035720', name: '카카오', market: 'KOSPI' });
+      expect(onSelect).toHaveBeenCalledWith({
+        code: '035720',
+        name: '카카오',
+        market: 'KOSPI',
+        sector: 'IT 서비스',
+      });
     });
   });
 });

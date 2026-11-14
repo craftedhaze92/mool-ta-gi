@@ -6,7 +6,8 @@ import { combine, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { calcWeightedAverage, pickNextSelectedId } from './calc';
 import { MOCK_HOLDINGS } from './mock';
-import { SECTORS, type Holding, type HoldingInput, type Sector } from './types';
+import { UNKNOWN_SECTOR } from '@/shared/api/stock-search-contract';
+import type { Holding, HoldingInput } from './types';
 
 const DEFAULT_ADD_QUANTITY = 30;
 
@@ -56,8 +57,11 @@ function toMigratedHolding(item: unknown): Holding | null {
     id: typeof id === 'string' && id !== '' ? id : `migrated-${code}`,
     code,
     name,
-    // 섹터 목록이 바뀌었을 수 있다. 모르는 값은 '기타'로 떨어뜨린다.
-    sector: SECTORS.includes(sector as Sector) ? (sector as Sector) : '기타',
+    /*
+     * 옛 섹터('반도체' 같은 직접 고른 값)는 그대로 둔다. 실제 업종은 종목코드로 종목 마스터를
+     * 조회해야 알 수 있어 여기서는 못 바꾸고, 섹터 동기화가 첫 화면에서 맞춰 준다.
+     */
+    sector: typeof sector === 'string' && sector.trim() !== '' ? sector : UNKNOWN_SECTOR,
     quantity,
     avgPrice,
   };
@@ -165,6 +169,20 @@ export const useHoldingsStore = create(
           setTargetAvgInput: (value: string) =>
             set((state) => {
               state.targetAvgInput = value;
+            }),
+
+          /**
+           * 종목 마스터의 업종으로 섹터를 맞춘다. 종목코드 → 업종명.
+           *
+           * 맵에 없는 코드(마스터에서 사라진 종목 등)는 건드리지 않는다. 값이 같으면 대입하지
+           * 않는다 — immer가 새 상태를 만들지 않아야 구독자가 쓸데없이 다시 그리지 않는다.
+           */
+          syncSectors: (sectorByCode: Readonly<Record<string, string | undefined>>) =>
+            set((state) => {
+              for (const holding of state.holdings) {
+                const sector = sectorByCode[holding.code];
+                if (sector !== undefined && sector !== holding.sector) holding.sector = sector;
+              }
             }),
         }),
       ),

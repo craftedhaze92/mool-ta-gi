@@ -30,13 +30,23 @@ function rank(stock: Stock, normalizedName: string, query: string): number | nul
 
 export interface StockIndex {
   search: (query: string, limit?: number) => Stock[];
+  /** 종목코드로 찾는다. 마스터에 없는 코드는 결과에서 빠진다 */
+  findByCodes: (codes: readonly string[]) => Stock[];
 }
 
-/** 정규화한 이름을 미리 계산해 두고, 검색마다 다시 만들지 않는다. */
+/** 정규화한 이름과 코드 색인을 미리 만들어 두고, 요청마다 다시 만들지 않는다. */
 export function createStockIndex(stocks: readonly Stock[]): StockIndex {
   const entries = stocks.map((stock) => ({ stock, normalizedName: normalize(stock.name) }));
+  const byCode = new Map(stocks.map((stock) => [stock.code, stock]));
 
   return {
+    findByCodes(codes) {
+      return codes.flatMap((code) => {
+        const stock = byCode.get(code);
+        return stock ? [stock] : [];
+      });
+    },
+
     search(rawQuery, limit = MAX_STOCK_SEARCH_RESULTS) {
       const query = normalize(rawQuery);
       if (query === '') return [];

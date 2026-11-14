@@ -8,7 +8,7 @@ import type { HoldingInput } from './types';
 const KAKAO: HoldingInput = {
   name: '카카오',
   code: '035720',
-  sector: '인터넷',
+  sector: 'IT 서비스',
   quantity: 90,
   avgPrice: 58_200,
 };
@@ -196,12 +196,20 @@ describe('persist', () => {
       expect(state().holdings.map((h) => h.id)).toEqual(['ok']);
     });
 
-    it('모르는 섹터는 기타로 떨어뜨린다', async () => {
-      seedStorage(2, [legacy({ sector: '없어진섹터' })]);
+    /*
+     * 옛 섹터는 사용자가 고른 값이라 버리지 않는다. 실제 업종은 종목 마스터를 조회해야 알 수
+     * 있으므로 여기서는 손대지 않고, 섹터 동기화(syncSectors)가 첫 화면에서 맞춘다.
+     */
+    it('섹터는 그대로 두고, 비어 있거나 문자열이 아니면 기타로 떨어뜨린다', async () => {
+      seedStorage(2, [
+        legacy({ id: 'a', sector: '없어진섹터' }),
+        legacy({ id: 'b', sector: '' }),
+        legacy({ id: 'c', sector: 42 }),
+      ]);
 
       await useHoldingsStore.persist.rehydrate();
 
-      expect(state().holdings[0].sector).toBe('기타');
+      expect(state().holdings.map((h) => h.sector)).toEqual(['없어진섹터', '기타', '기타']);
     });
 
     it('저장 형태 자체가 깨졌으면 seed로 떨어진다', async () => {
@@ -211,5 +219,28 @@ describe('persist', () => {
 
       expect(state().holdings).toEqual(MOCK_HOLDINGS);
     });
+  });
+});
+
+describe('syncSectors', () => {
+  it('종목 마스터의 업종으로 섹터를 맞추고, 맵에 없는 종목은 그대로 둔다', () => {
+    useHoldingsStore.setState({
+      holdings: [
+        { ...HOLDING_FIXTURES[0], sector: '반도체' },
+        { ...HOLDING_FIXTURES[2], sector: '인터넷' },
+      ],
+    });
+
+    state().syncSectors({ '005930': '전기·전자' });
+
+    expect(state().holdings.map((h) => h.sector)).toEqual(['전기·전자', '인터넷']);
+  });
+
+  it('바뀐 것이 없으면 상태 객체를 새로 만들지 않는다', () => {
+    const before = state().holdings;
+
+    state().syncSectors({ [before[0].code]: before[0].sector });
+
+    expect(state().holdings).toBe(before);
   });
 });
