@@ -118,6 +118,21 @@ describe('AveragingPanel', () => {
     expect(screen.getByText('추가 매수 수량은 0 이상의 정수로 입력해주세요.')).toBeInTheDocument();
   });
 
+  it('종목이 없으면 비활성 미리보기와 종목 추가 버튼을 보여준다', async () => {
+    useHoldingsStore.setState({ holdings: [], selectedId: null });
+    const user = userEvent.setup();
+
+    renderWithQuery(<AveragingPanel />);
+
+    expect(screen.getByText(/종목을 추가하면 추가 매수 수량·예산으로/)).toBeInTheDocument();
+    expect(screen.getByTestId('averaging-panel-preview')).toHaveAttribute('inert');
+    // 실제 폼이 아니라 미리보기다
+    expect(screen.queryByLabelText('매수가 (원)')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '＋ 종목 추가' }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  });
+
   it('새 평단가와 변화율, 손익분기 주가를 보여준다', () => {
     renderWithQuery(<AveragingPanel />);
 

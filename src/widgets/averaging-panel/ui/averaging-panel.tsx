@@ -23,8 +23,10 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group';
 import { PANEL, PANEL_RIGHT_COLUMN, PANEL_SPLIT } from '../lib/panel';
+import { AveragingPanelPreview } from './averaging-panel-preview';
 import { AveragingPanelSkeleton } from './averaging-panel-skeleton';
 import { GapGauge } from './gap-gauge';
+import { ResultRow, StatCell } from './panel-rows';
 
 type Mode = SimulationInput['mode'];
 
@@ -33,43 +35,13 @@ const MODES: { value: Mode; label: string }[] = [
   { value: 'budget', label: '예산' },
 ];
 
-function StatCell({ label, value, tone }: { label: string; value: string; tone?: string }) {
-  return (
-    <span className="flex flex-col gap-[3px]">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn('text-sm font-bold', tone)}>{value}</span>
-    </span>
-  );
-}
-
-function ResultRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex justify-between gap-2">
-      <span className="text-muted-foreground shrink-0">{label}</span>
-      <span className="text-right font-bold">{children}</span>
-    </div>
-  );
-}
-
-/** 계산할 종목이 없을 때. 시뮬레이터 UI 전체를 감추고 안내만 남긴다. */
-function EmptyPanel() {
-  return (
-    <aside id={AVERAGING_PANEL_ID} className={cn(PANEL, 'gap-3')}>
-      <h2 className="text-base font-bold">물타기 시뮬레이터</h2>
-      <p className="text-muted-foreground text-[13px] leading-relaxed">
-        아직 계산할 종목이 없어요. 왼쪽에서 종목을 추가하면 평단가 시뮬레이션을 할 수 있습니다.
-      </p>
-    </aside>
-  );
-}
-
 export function AveragingPanel() {
   const holding = useSelectedHolding();
   const holdings = useHoldingsStore((s) => s.holdings);
   const { prices, status, refetch } = useHoldingQuotes();
 
   // 훅은 전부 위에서 부른다. 조기 반환은 그 뒤에.
-  if (!holding) return <EmptyPanel />;
+  if (!holding) return <AveragingPanelPreview />;
 
   /*
    * 첫 시세를 기다리는 동안은 스켈레톤이다. 매수가의 기본값이 현재가라 아직 계산할 것이 없고,

@@ -353,6 +353,6 @@ describe('DashboardPage', () => {
     expect(screen.getByText('아직 보유 종목이 없어요')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '첫 종목 추가하기' })).toBeInTheDocument();
     expect(screen.getAllByText('종목을 추가하면 비중이 표시됩니다')).toHaveLength(2);
-    expect(screen.getByText(/왼쪽에서 종목을 추가하면/)).toBeInTheDocument();
+    expect(screen.getByText(/종목을 추가하면 추가 매수 수량·예산으로/)).toBeInTheDocument();
   });
 });
