@@ -375,7 +375,7 @@ function SimulationResultView({
         )}
 
         <ResultRow label="새 평단가">
-          <AnimatedNumber value={result.newAvgPrice} format={formatWon} />{' '}
+          <AnimatedNumber value={result.newAvgPrice} format={formatWon} /> <br />
           <span
             className={cn(
               'text-xs font-semibold',
