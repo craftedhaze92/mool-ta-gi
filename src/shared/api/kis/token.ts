@@ -133,7 +133,13 @@ function describe(error: unknown): string {
  * 무효화하므로, 다른 프로세스(로컬 스크립트, 다른 배포 인스턴스)가 한 번만 발급해도
  * 우리 캐시가 조용히 죽는다. 그때 KIS는 EGW00121을 돌려준다. 이 함수를 부르고 다시
  * 받아오면 회복된다.
+ *
+ * 거절당한 토큰이 **지금 캐시에 든 토큰일 때만** 버린다. 시세와 지수가 같은 옛 토큰을
+ * 들고 동시에 거절당하면, 먼저 거절된 쪽이 이미 재발급을 마친 뒤에 나머지가 거절을
+ * 보고한다. 이때 무조건 비우면 방금 받은 새 토큰을 버리고 또 발급하게 된다 — 발급이
+ * 연속 2번 나가 알림이 두 번 가고, 두 번째 발급이 첫 번째 토큰을 무효화해 먼저 재시도한
+ * 쪽까지 다시 실패한다.
  */
-export function invalidateToken(): void {
-  cached = null;
+export function invalidateToken(rejected: string): void {
+  if (cached?.accessToken === rejected) cached = null;
 }

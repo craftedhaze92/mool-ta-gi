@@ -56,8 +56,10 @@ export interface FetchQuotesResult {
 export async function fetchQuotes(codes: string[]): Promise<FetchQuotesResult> {
   if (codes.length === 0) return { quotes: [], failed: [] };
 
+  const token = await getAccessToken();
+
   try {
-    return await runBatches(codes, await getAccessToken());
+    return await runBatches(codes, token);
   } catch (error) {
     if (!(error instanceof KisError) || error.kind !== 'token-invalid') throw error;
 
@@ -65,9 +67,12 @@ export async function fetchQuotes(codes: string[]): Promise<FetchQuotesResult> {
      * 들고 있던 토큰이 거절됐다. 만료 시각으로는 알 수 없는 상황이라(다른 프로세스가
      * 발급하면 우리 토큰이 무효화된다) 캐시를 버리고 딱 한 번 다시 시도한다.
      * 두 번째도 실패하면 진짜 인증 문제이므로 그대로 올려보낸다.
+     *
+     * 거절당한 토큰을 넘겨야 한다. 지수 쪽이 먼저 재발급을 마쳤다면 캐시는 이미 새 토큰이고,
+     * 그걸 버리지 않고 그대로 받아 재시도한다.
      */
     console.warn('[kis] 토큰이 거절되어 재발급 후 한 번 재시도한다.');
-    invalidateToken();
+    invalidateToken(token);
     return await runBatches(codes, await getAccessToken());
   }
 }
