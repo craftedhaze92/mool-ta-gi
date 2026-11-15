@@ -7,14 +7,14 @@ import { ThemeProvider } from '@/shared/ui/theme-provider';
 export const metadata: Metadata = {
   metadataBase: new URL('https://mool-ta-gi.vercel.app'),
   title: {
-    default: '평단구조대 — 주식 물타기 시뮬레이터',
+    default: '평단구조대 | 주식 물타기 시뮬레이터',
     template: '%s | 평단구조대',
   },
   description:
     '보유 종목의 평단가를 얼마나 낮출 수 있는지 계산해보세요. 국내 주식 포트폴리오 트래커와 물타기 시뮬레이터.',
   keywords: ['물타기', '평단가', '주식 포트폴리오', '평단 계산기', '국내주식'],
   openGraph: {
-    title: '평단구조대 — 주식 물타기 시뮬레이터',
+    title: '평단구조대 | 주식 물타기 시뮬레이터',
     description: '감으로 물타지 말고, 계산하고 물타세요.',
     url: '/',
     siteName: '평단구조대',
