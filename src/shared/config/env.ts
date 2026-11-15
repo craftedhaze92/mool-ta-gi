@@ -55,3 +55,22 @@ export function getServerEnv(): ServerEnv {
   cached = parsed.data;
   return cached;
 }
+
+export interface TokenStoreEnv {
+  url: string;
+  token: string;
+}
+
+/**
+ * KIS 토큰 공유 저장소(Upstash Redis REST) 설정.
+ *
+ * Vercel Marketplace의 Upstash for Redis를 연결하면 KV_REST_API_URL / KV_REST_API_TOKEN이
+ * 주입된다. 둘 중 하나라도 없으면 null — 저장소 없이 인스턴스 로컬 캐시로만 동작한다
+ * (로컬 개발, 테스트, CI). 필수가 아니므로 getServerEnv()와 달리 throw하지 않는다.
+ */
+export function getTokenStoreEnv(): TokenStoreEnv | null {
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  return { url: url.replace(/\/+$/, ''), token };
+}

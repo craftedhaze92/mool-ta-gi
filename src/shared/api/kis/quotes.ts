@@ -72,7 +72,7 @@ export async function fetchQuotes(codes: string[]): Promise<FetchQuotesResult> {
      * 그걸 버리지 않고 그대로 받아 재시도한다.
      */
     console.warn('[kis] 토큰이 거절되어 재발급 후 한 번 재시도한다.');
-    invalidateToken(token);
+    await invalidateToken(token);
     return await runBatches(codes, await getAccessToken());
   }
 }

@@ -51,7 +51,7 @@ export async function fetchIndices(): Promise<FetchIndicesResult> {
     if (!(error instanceof KisError) || error.kind !== 'token-invalid') throw error;
 
     console.warn('[kis] 토큰이 거절되어 재발급 후 한 번 재시도한다. (지수)');
-    invalidateToken(token);
+    await invalidateToken(token);
     return await runIndices(await getAccessToken());
   }
 }

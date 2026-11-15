@@ -23,6 +23,15 @@ export const tokenResponseSchema = z.object({
 export type KisTokenResponse = z.output<typeof tokenResponseSchema>;
 
 /**
+ * 토큰 발급 실패 응답. 시세 API와 달리 msg_cd가 아니라 error_code로 온다.
+ * 예: {"error_description":"접근토큰 발급 잠시 후 다시 시도하세요(1분당 1회)","error_code":"EGW00133"}
+ * error_description은 로그에 남기지 않는다 (본문 전체를 신뢰할 수 없어서 코드만 쓴다).
+ */
+export const tokenErrorSchema = z.object({
+  error_code: z.string().optional(),
+});
+
+/**
  * GET /uapi/domestic-stock/v1/quotations/intstock-multprice (tr_id: FHKST11300006)
  * 관심종목(멀티종목) 시세조회. 한 번에 최대 30종목.
  *
